@@ -1,0 +1,21 @@
+{
+  "name": "kculture-quiz-website",
+  "version": "1.0.0",
+  "description": "A dynamic and interactive cultural quiz website inspired by K-Culture.",
+  "main": "src/js/main.js",
+  "scripts": {
+    "start": "live-server src",
+    "build": "echo 'Build script not defined'"
+  },
+  "keywords": [
+    "quiz",
+    "K-Culture",
+    "interactive",
+    "web"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "live-server": "^1.2.1"
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "questions": [
+    {
+      "question": "What is the name of the popular K-Pop group known for their hit song 'Dynamite'?",
+      "options": ["BTS", "Blackpink", "EXO", "Twice"],
+      "answer": "BTS"
+    },
+    {
+      "question": "Which K-Drama features a love story between a goblin and a human?",
+      "options": ["Goblin", "Crash Landing on You", "Itaewon Class", "Descendants of the Sun"],
+      "answer": "Goblin"
+    },
+    {
+      "question": "What is the traditional Korean dish made of fermented vegetables?",
+      "options": ["Kimchi", "Bibimbap", "Tteokbokki", "Sundubu-jjigae"],
+      "answer": "Kimchi"
+    },
+    {
+      "question": "Which Korean festival celebrates the harvest and is known as Chuseok?",
+      "options": ["Lunar New Year", "Boknal", "Chuseok", "Seollal"],
+      "answer": "Chuseok"
+    },
+    {
+      "question": "What is the capital city of South Korea?",
+      "options": ["Seoul", "Busan", "Incheon", "Gwangju"],
+      "answer": "Seoul"
+    },
+    {
+      "question": "Which K-Pop artist is known as the 'Queen of K-Pop'?",
+      "options": ["BoA", "IU", "HyunA", "Sunmi"],
+      "answer": "BoA"
+    },
+    {
+      "question": "What is the name of the Korean traditional dress?",
+      "options": ["Hanbok", "Kimono", "Cheongsam", "Sari"],
+      "answer": "Hanbok"
+    },
+    {
+      "question": "Which K-Drama features a time-traveling romance?",
+      "options": ["The King: Eternal Monarch", "My Love from the Star", "Hotel Del Luna", "W: Two Worlds"],
+      "answer": "W: Two Worlds"
+    },
+    {
+      "question": "What is the Korean term for 'thank you'?",
+      "options": ["Annyeong", "Gamsahamnida", "Saranghae", "Jal meokkessseumnida"],
+      "answer": "Gamsahamnida"
+    },
+    {
+      "question": "Which K-Pop group is known for their song 'How You Like That'?",
+      "options": ["BTS", "Blackpink", "Red Velvet", "GOT7"],
+      "answer": "Blackpink"
+    },
+    {
+      "question": "What is the name of the Korean martial art that emphasizes kicking?",
+      "options": ["Taekwondo", "Judo", "Karate", "Hapkido"],
+      "answer": "Taekwondo"
+    },
+    {
+      "question": "Which South Korean city is famous for its beaches and nightlife?",
+      "options": ["Seoul", "Busan", "Incheon", "Suwon"],
+      "answer": "Busan"
+    },
+    {
+      "question": "What is the name of the Korean traditional music genre?",
+      "options": ["Gugak", "Pansori", "K-Pop", "Trot"],
+      "answer": "Gugak"
+    },
+    {
+      "question": "Which K-Drama features a love story between a doctor and a patient?",
+      "options": ["Doctors", "It's Okay to Not Be Okay", "Hospital Playlist", "Romantic Doctor, Teacher Kim"],
+      "answer": "It's Okay to Not Be Okay"
+    },
+    {
+      "question": "What is the Korean word for 'family'?",
+      "options": ["Gajok", "Chingu", "Hagwon", "Seongsaengnim"],
+      "answer": "Gajok"
+    },
+    {
+      "question": "Which K-Pop group debuted with the song 'Like Ooh-Ahh'?",
+      "options": ["Twice", "Red Velvet", "ITZY", "GFRIEND"],
+      "answer": "Twice"
+    },
+    {
+      "question": "What is the name of the Korean holiday that celebrates the first full moon of the lunar year?",
+      "options": ["Seollal", "Chuseok", "Boknal", "Dano"],
+      "answer": "Seollal"
+    },
+    {
+      "question": "Which K-Drama features a love triangle involving a rich heir and a poor girl?",
+      "options": ["Boys Over Flowers", "My Love from the Star", "Heirs", "Secret Garden"],
+      "answer": "Boys Over Flowers"
+    },
+    {
+      "question": "What is the traditional Korean rice cake called?",
+      "options": ["Tteok", "Banchan", "Kimchi", "Gimbap"],
+      "answer": "Tteok"
+    },
+    {
+      "question": "Which K-Pop group is known for their hit song 'Love Scenario'?",
+      "options": ["iKON", "BTS", "EXO", "Seventeen"],
+      "answer": "iKON"
+    },
+    {
+      "question": "What is the Korean term for 'friend'?",
+      "options": ["Chingu", "Hagwon", "Gajok", "Seongsaengnim"],
+      "answer": "Chingu"
+    }
+  ]
+}
