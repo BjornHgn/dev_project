@@ -1,5 +1,5 @@
 // quiz.js
-
+import { io } from 'socket.io-client';
 const quizContainer = document.getElementById('quiz');
 const resultsContainer = document.getElementById('results');
 const submitButton = document.getElementById('submit');
@@ -8,6 +8,33 @@ let currentQuestionIndex = 0;
 let score = 0;
 let timer;
 const timeLimit = 15; // seconds for each question
+const socket = io('http://localhost:5000'); // Connect to the backend server
+
+// Join a game session
+socket.emit('joinSession', { sessionId: 'example-session-id', userId: 'example-user-id' });
+
+// Listen for game start
+socket.on('gameStarted', (data) => {
+    console.log('Game started:', data);
+    // Start the quiz
+});
+
+// Notify the server when the game ends
+function endGame() {
+    socket.emit('endGame', { sessionId: 'example-session-id' });
+}
+
+document.getElementById('get-hint').addEventListener('click', async () => {
+    const question = document.getElementById('question').textContent;
+    const response = await fetch('http://localhost:5000/api/ai/generate-hint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question }),
+    });
+
+    const data = await response.json();
+    document.getElementById('hint-container').textContent = data.hint;
+});
 
 // Load questions from JSON file
 async function loadQuestions() {

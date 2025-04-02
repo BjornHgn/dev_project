@@ -17,6 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "live-server": "^1.2.1",
-    "mongoose": "^8.13.1"
+    "mongoose": "^8.13.1",
+    "socket.io-client": "^4.8.1"
   }
 }
