@@ -18,8 +18,16 @@ io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
 
     socket.on('joinSession', (data) => {
-        socket.join(data.sessionId);
-        console.log(`User ${data.userId} joined session ${data.sessionId}`);
+        const { sessionId, userId } = data;
+
+        // Log the player's name and session ID
+        console.log(`User ${userId} joined session ${sessionId}`);
+
+        // Add the player to the session
+        socket.join(sessionId);
+
+        // Notify other players in the session
+        socket.to(sessionId).emit('playerJoined', { userId });
     });
 
     socket.on('endGame', (data) => {
@@ -29,6 +37,13 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log('A user disconnected:', socket.id);
     });
+});
+
+socket.on('updateScore', (data) => {
+    const { sessionId, playerName, playerScore } = data;
+
+    // Broadcast the updated score to all players in the session
+    io.to(sessionId).emit('scoreUpdated', { playerName, playerScore });
 });
 
 server.listen(PORT, () => {

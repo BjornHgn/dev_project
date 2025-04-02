@@ -13,7 +13,11 @@
             <p>Test your knowledge about Korean culture, including music, dramas, history, language, and traditions.</p>
         </header>
         <main>
-            <button id="start-quiz">Start Quiz</button>
+            <form id="player-form">
+                <label for="player-name">Enter your name:</label>
+                <input type="text" id="player-name" name="player-name" required>
+                <button type="submit" id="start-quiz">Start Quiz</button>
+            </form>
         </main>
     </div>
     <script src="js/main.js"></script>

@@ -17,6 +17,11 @@ socket.on('gameStarted', (data) => {
     // Start the quiz
 });
 
+socket.on('scoreUpdated', (data) => {
+    const { playerName, playerScore } = data;
+    updateScoreboard(playerName, playerScore); // Update the scoreboard dynamically
+});
+
 // Notify the server when the game ends
 function endGame() {
     socket.emit('endGame', { sessionId: 'example-session-id' });
@@ -34,6 +39,23 @@ document.getElementById('get-hint').addEventListener('click', async () => {
     document.getElementById('hint-container').textContent = data.hint;
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+    const playerName = localStorage.getItem("playerName");
+    if (!playerName) {
+        alert("Please enter your name before starting the quiz.");
+        window.location.href = "index.html";
+        return;
+    }
+
+    console.log(`Player Name: ${playerName}`); // Debugging: Ensure the name is retrieved
+    socket.emit('joinSession', { sessionId: 'example-session-id', userId: playerName });
+
+    // Add the player to the scoreboard with an initial score of 0
+    updateScoreboard(playerName, 0);
+
+    startQuiz();
+});
+
 // Load questions from JSON file
 async function loadQuestions() {
     const response = await fetch('data/questions.json');
@@ -44,14 +66,14 @@ async function loadQuestions() {
 
 // Start the quiz
 async function startQuiz() {
-    console.log('Starting quiz...'); // Debugging
-    const questions = await loadQuestions(); // Load questions from JSON
-    console.log('Loaded questions:', questions); // Debugging
-    const shuffledQuestions = shuffleArray(questions); // Shuffle the questions
-    console.log('Shuffled questions:', shuffledQuestions); // Debugging
-    window.quizQuestions = shuffledQuestions; // Save the shuffled questions globally
-    displayQuestion(window.quizQuestions[currentQuestionIndex]); // Display the first question
-    startTimer(); // Start the timer
+    const playerName = localStorage.getItem("playerName");
+    updateScoreboard(playerName, 0); // Add the player to the scoreboard with an initial score of 0
+
+    const questions = await loadQuestions();
+    const shuffledQuestions = shuffleArray(questions);
+    window.quizQuestions = shuffledQuestions;
+    displayQuestion(window.quizQuestions[currentQuestionIndex]);
+    startTimer();
 }
 
 // Display the current question
@@ -92,8 +114,12 @@ submitButton.addEventListener('click', () => {
 // Check the selected answer
 function checkAnswer(answer) {
     const currentQuestion = window.quizQuestions[currentQuestionIndex];
+    const playerName = localStorage.getItem("playerName");
+
     if (answer === currentQuestion.answer) {
         score++;
+        updateScoreboard(playerName, score); // Update the scoreboard with the new score
+        socket.emit('updateScore', { sessionId: 'example-session-id', playerName, playerScore: score }); // Notify the server
     }
 }
 
@@ -131,6 +157,22 @@ function showResults() {
         <p>Thank you for participating!</p>
         <button onclick="location.reload()">Retake Quiz</button>
     `;
+}
+
+function updateScoreboard(playerName, playerScore) {
+    const scoreboardList = document.getElementById('scoreboard-list');
+    let playerEntry = document.getElementById(`player-${playerName}`);
+
+    if (!playerEntry) {
+        // Create a new entry for the player if it doesn't exist
+        playerEntry = document.createElement('li');
+        playerEntry.id = `player-${playerName}`;
+        playerEntry.textContent = `${playerName}: ${playerScore}`;
+        scoreboardList.appendChild(playerEntry);
+    } else {
+        // Update the player's score
+        playerEntry.textContent = `${playerName}: ${playerScore}`;
+    }
 }
 
 function shuffleArray(array) {
