@@ -1,47 +1,34 @@
-# K-Culture Quiz Website
+# 🎓 QuizMaster - Site de Quiz de Culture Générale en Ligne
 
-Welcome to the K-Culture Quiz Website! This interactive quiz is designed to test your knowledge of Korean culture, including music, dramas, history, language, and traditions. 
+QuizMaster est une application web permettant aux utilisateurs de tester leurs connaissances en culture générale grâce à des quiz interactifs. L'application est construite avec Node.js et Express pour le backend, et utilise une base de données pour stocker les questions et les scores des utilisateurs.
 
-## Features
+## 🚀 Fonctionnalités
 
-- **Homepage**: An introduction to the quiz with a start button to begin the quiz.
-- **Quiz Page**: Answer multiple-choice questions with a timer for each question.
-- **Results Page**: View your score and get explanations for any incorrect answers.
-- **Responsive Design**: The website is designed to be modern and responsive, ensuring a great experience on all devices.
+- 🔹 Inscription et authentification des utilisateurs
+- 🔹 Sélection de quiz par catégories (histoire, science, sport, etc.)
+- 🔹 Système de notation et classement des joueurs
+- 🔹 Création et gestion des quiz par les administrateurs
+- 🔹 Interface utilisateur responsive et moderne
 
-## Project Structure
+## 🛠️ Technologies utilisées
 
+- **Backend :** Node.js, Express.js
+- **Base de données :** MongoDB
+- **Frontend :** HTML, CSS, JavaScript
+- **Authentification :** JSON Web Tokens (JWT)
+- **Autres :** Socket.io (pour le mode multijoueur en temps réel), dotenv, bcrypt
+
+## 📦 Installation
+
+### 1️⃣ Prérequis
+
+- Node.js (v16+ recommandé)
+- MongoDB installé
+- Un gestionnaire de packages (`npm` ou `yarn`)
+
+### 2️⃣ Cloner le projet
+
+```sh
+git clone https://github.com/BjornHgn/dev_project.git
+cd culture-quiz-website
 ```
-kculture-quiz-website
-├── src
-│   ├── index.html          # Homepage of the quiz
-│   ├── quiz.html           # Quiz page with questions
-│   ├── results.html        # Results page displaying score
-│   ├── css
-│   │   └── styles.css      # Styles for the website
-│   ├── js
-│   │   ├── main.js         # Main JavaScript file
-│   │   ├── quiz.js         # Quiz functionality
-│   │   └── results.js      # Results processing
-│   ├── data
-│   │   └── questions.json   # JSON file containing quiz questions
-│   └── assets
-│       └── images          # Directory for images
-├── README.md               # Project documentation
-└── package.json            # npm configuration file
-```
-
-## Setup Instructions
-
-1. Clone the repository to your local machine.
-2. Navigate to the project directory.
-3. Open `index.html` in your web browser to start the quiz.
-
-## Suggestions for Future Improvements
-
-- **Leaderboard**: Implement a leaderboard to display top scores.
-- **User Authentication**: Allow users to create accounts and save their scores.
-- **More Questions**: Expand the question database to include more topics and difficulty levels.
-- **Social Sharing**: Add functionality for users to share their scores on social media.
-
-Thank you for participating in the K-Culture Quiz! Enjoy testing your knowledge!
