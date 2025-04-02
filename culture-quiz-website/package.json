@@ -1,5 +1,5 @@
 {
-  "name": "kculture-quiz-website",
+  "name": "culture-quiz-website",
   "version": "1.0.0",
   "description": "A dynamic and interactive cultural quiz website inspired by K-Culture.",
   "main": "src/js/main.js",
@@ -9,13 +9,14 @@
   },
   "keywords": [
     "quiz",
-    "K-Culture",
+    "Culture",
     "interactive",
     "web"
   ],
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "live-server": "^1.2.1"
+    "live-server": "^1.2.1",
+    "mongoose": "^8.13.1"
   }
 }
