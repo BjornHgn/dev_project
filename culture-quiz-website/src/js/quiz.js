@@ -79,9 +79,10 @@ submitButton.addEventListener('click', () => {
         currentQuestionIndex++;
         if (currentQuestionIndex < window.quizQuestions.length) {
             displayQuestion(window.quizQuestions[currentQuestionIndex]); // Display the next question
+            startTimer(); // Restart the timer for the next question
         } else {
-            clearInterval(timer);
-            showResults(); // Show results when the quiz ends
+            clearInterval(timer); // Stop the timer when the quiz ends
+            showResults(); // Show results
         }
     } else {
         alert('Please select an answer!');
@@ -98,20 +99,26 @@ function checkAnswer(answer) {
 
 // Start the timer
 function startTimer() {
+    // Clear any existing timer
+    clearInterval(timer);
+
     let timeLeft = timeLimit;
     timerDisplay.textContent = `Time left: ${timeLeft}s`;
+
+    // Start a new timer
     timer = setInterval(() => {
         timeLeft--;
         timerDisplay.textContent = `Time left: ${timeLeft}s`;
+
         if (timeLeft <= 0) {
             clearInterval(timer);
             alert('Time is up!');
             currentQuestionIndex++;
             if (currentQuestionIndex < window.quizQuestions.length) {
                 displayQuestion(window.quizQuestions[currentQuestionIndex]);
-                startTimer();
+                startTimer(); // Restart the timer for the next question
             } else {
-                showResults();
+                showResults(); // Show results when the quiz ends
             }
         }
     }, 1000);
