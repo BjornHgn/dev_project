@@ -1,5 +1,3 @@
-// quiz.js
-import { io } from 'socket.io-client';
 const quizContainer = document.getElementById('quiz');
 const resultsContainer = document.getElementById('results');
 const submitButton = document.getElementById('submit');
@@ -39,19 +37,26 @@ document.getElementById('get-hint').addEventListener('click', async () => {
 // Load questions from JSON file
 async function loadQuestions() {
     const response = await fetch('data/questions.json');
-    const questions = await response.json();
-    return questions;
+    const data = await response.json();
+    console.log('Loaded questions from JSON:', data); // Debugging
+    return data.questions; // Ensure you return the "questions" array
 }
 
 // Start the quiz
 async function startQuiz() {
-    const questions = await loadQuestions();
-    displayQuestion(questions[currentQuestionIndex]);
-    startTimer();
+    console.log('Starting quiz...'); // Debugging
+    const questions = await loadQuestions(); // Load questions from JSON
+    console.log('Loaded questions:', questions); // Debugging
+    const shuffledQuestions = shuffleArray(questions); // Shuffle the questions
+    console.log('Shuffled questions:', shuffledQuestions); // Debugging
+    window.quizQuestions = shuffledQuestions; // Save the shuffled questions globally
+    displayQuestion(window.quizQuestions[currentQuestionIndex]); // Display the first question
+    startTimer(); // Start the timer
 }
 
 // Display the current question
 function displayQuestion(question) {
+    console.log('Displaying question:', question); // Debugging
     quizContainer.innerHTML = `
         <h2>${question.question}</h2>
         <ul>
@@ -70,13 +75,13 @@ submitButton.addEventListener('click', () => {
     const selectedOption = document.querySelector('input[name="answer"]:checked');
     if (selectedOption) {
         const answer = selectedOption.value;
-        checkAnswer(answer);
+        checkAnswer(answer); // Check the selected answer
         currentQuestionIndex++;
-        if (currentQuestionIndex < questions.length) {
-            displayQuestion(questions[currentQuestionIndex]);
+        if (currentQuestionIndex < window.quizQuestions.length) {
+            displayQuestion(window.quizQuestions[currentQuestionIndex]); // Display the next question
         } else {
             clearInterval(timer);
-            showResults();
+            showResults(); // Show results when the quiz ends
         }
     } else {
         alert('Please select an answer!');
@@ -85,8 +90,8 @@ submitButton.addEventListener('click', () => {
 
 // Check the selected answer
 function checkAnswer(answer) {
-    const questions = loadQuestions();
-    if (answer === questions[currentQuestionIndex].correctAnswer) {
+    const currentQuestion = window.quizQuestions[currentQuestionIndex];
+    if (answer === currentQuestion.answer) {
         score++;
     }
 }
@@ -102,8 +107,8 @@ function startTimer() {
             clearInterval(timer);
             alert('Time is up!');
             currentQuestionIndex++;
-            if (currentQuestionIndex < questions.length) {
-                displayQuestion(questions[currentQuestionIndex]);
+            if (currentQuestionIndex < window.quizQuestions.length) {
+                displayQuestion(window.quizQuestions[currentQuestionIndex]);
                 startTimer();
             } else {
                 showResults();
@@ -121,5 +126,14 @@ function showResults() {
     `;
 }
 
-// Initialize the quiz
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
 startQuiz();
+});

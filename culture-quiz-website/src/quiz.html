@@ -9,15 +9,14 @@
 <body>
     <div class="quiz-container">
         <h1>Culture Quiz</h1>
-        <div id="question-container">
-            <div id="question"></div>
-            <div id="answer-buttons" class="btn-container"></div>
-        </div>
-        <button id="get-hint">Get Hint</button>
-        <div id="hint-container"></div>
+        <div id="quiz"></div> <!-- This is where questions will be displayed -->
+        <div id="hint-container"></div> <!-- This is where hints will be displayed -->
         <div id="timer">Time left: <span id="time">30</span> seconds</div>
-        <button id="next-button" class="btn" style="display: none;">Next</button>
+        <button id="get-hint">Get Hint</button>
+        <button id="submit">Submit Answer</button> <!-- Submit button -->
+        <div id="results"></div> <!-- This is where results will be displayed -->
     </div>
-    <script src="js/quiz.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script type="module" src="js/quiz.js"></script>
 </body>
 </html>
