@@ -25,9 +25,6 @@ let timer;
 const timeLimit = 15; // seconds for each question
 const socket = io('http://localhost:5000'); // Connect to the backend server
 
-// Join a game session
-socket.emit('joinSession', { sessionId: 'example-session-id', userId: 'example-user-id' });
-
 // Listen for game start
 socket.on('gameStarted', (data) => {
     console.log('Game started:', data);
@@ -41,7 +38,9 @@ socket.on('scoreUpdated', (data) => {
 
 // Notify the server when the game ends
 function endGame() {
-    socket.emit('endGame', { sessionId: 'example-session-id' });
+    const sessionId = localStorage.getItem("sessionId") || "fallback-session";
+    console.log(`Ending game for session: ${sessionId}`);
+    socket.emit('endGame', { sessionId: sessionId });
 }
 
 document.getElementById('get-hint').addEventListener('click', async () => {
@@ -58,23 +57,15 @@ document.getElementById('get-hint').addEventListener('click', async () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const playerName = localStorage.getItem("playerName");
-    console.log(`Starting quiz for player: ${playerName}`);
+    // Get the session ID from localStorage - this is set when creating a session in main.js
+    const sessionId = localStorage.getItem("sessionId") || generateFallbackSessionId();
     
-    // Check if player name exists
-    if (!playerName) {
-        showModal('Nom du joueur requis', 'Veuillez entrer votre nom avant de commencer le quiz.', () => {
-            window.location.href = "index.html";
-        });
-        return;
-    }
-
-    console.log(`Player Name: ${playerName}`); // Debugging: Ensure the name is retrieved
-    socket.emit('joinSession', { sessionId: 'example-session-id', userId: playerName });
-
-    // Add the player to the scoreboard with an initial score of 0
-    updateScoreboard(playerName, 0);
-
-    startQuiz();
+    console.log(`Starting quiz for player: ${playerName} with session: ${sessionId}`);
+    
+    // Use the actual session ID from localStorage
+    socket.emit('joinSession', { sessionId: sessionId, userId: playerName });
+    
+    // Rest of your DOMContentLoaded code...
 });
 
 // Load questions from JSON file
@@ -95,6 +86,17 @@ async function startQuiz() {
     window.quizQuestions = shuffledQuestions;
     displayQuestion(window.quizQuestions[currentQuestionIndex]);
     startTimer();
+}
+
+function generateFallbackSessionId() {
+    // Create a fallback random hex ID if one wasn't stored
+    const characters = '0123456789abcdef';
+    let result = '';
+    for (let i = 0; i < 16; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    console.log('Generated fallback session ID:', result);
+    return result;
 }
 
 // Display the current question with validation
@@ -144,12 +146,31 @@ submitButton.addEventListener('click', () => {
 function checkAnswer(answer) {
     const currentQuestion = window.quizQuestions[currentQuestionIndex];
     const playerName = localStorage.getItem("playerName");
-    const sessionId = localStorage.getItem("sessionId") || "default-session";
+    const sessionId = localStorage.getItem("sessionId") || "fallback-session";
 
     if (answer === currentQuestion.answer) {
         score++;
-        updateScoreboard(playerName, score); // Update the scoreboard with the new score
-        socket.emit('updateScore', { sessionId: 'example-session-id', playerName, playerScore: score }); // Notify the server
+        updateScoreboard(playerName, score);
+        
+        // Use the correct session ID from localStorage
+        socket.emit('updateScore', { 
+            sessionId: sessionId, 
+            playerName, 
+            playerScore: score 
+        });
+        
+        // Also update the database
+        fetch('http://localhost:5000/api/game/update-score', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                sessionId,
+                playerName,
+                score
+            })
+        }).catch(err => console.error('Error updating score:', err));
     }
 }
 
