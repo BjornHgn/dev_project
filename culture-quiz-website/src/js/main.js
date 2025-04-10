@@ -1,31 +1,71 @@
 // Main JavaScript file for the K-Culture Quiz Website
 
-// Function to initialize the application
-function init() {
-    // Check if the user is on the homepage
-    if (window.location.pathname === '/index.html') {
-        document.getElementById('start-button').addEventListener('click', startQuiz);
+// Improve the createGameSession function
+async function createGameSession(playerName) {
+    try {
+        console.log('Attempting to create game session for:', playerName);
+        
+        const response = await fetch('http://localhost:5000/api/sessions/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userId: playerName })
+        });
+        
+        const data = await response.json();
+        console.log('Server response:', data);
+        
+        if (response.ok) {
+            // Store the session ID in localStorage
+            localStorage.setItem('sessionId', data.session.sessionId);
+            console.log('Created session with ID:', data.session.sessionId);
+            return data.session.sessionId;
+        } else {
+            console.error('Failed to create session:', data.error);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error creating session:', error);
+        console.error('Network error details:', error.message);
+        return null;
     }
 }
 
-// Function to navigate to the quiz page
-function startQuiz() {
-    window.location.href = 'quiz.html';
-}
-
+// SINGLE event listener for DOMContentLoaded - REMOVE ALL OTHERS
 document.addEventListener("DOMContentLoaded", () => {
+    console.log('DOM fully loaded - initializing form handler');
     const playerForm = document.getElementById("player-form");
+    
+    if (!playerForm) {
+        console.error('Player form not found in the document!');
+        return;
+    }
 
-    playerForm.addEventListener("submit", (event) => {
+    playerForm.addEventListener("submit", async (event) => {
         event.preventDefault(); // Prevent the form from refreshing the page
+        console.log('Form submitted');
 
-        const playerName = document.getElementById("player-name").value.trim();
+        const playerNameInput = document.getElementById("player-name");
+        if (!playerNameInput) {
+            console.error('Player name input not found!');
+            return;
+        }
+
+        const playerName = playerNameInput.value.trim();
         if (playerName) {
+            console.log(`Player name: ${playerName} - creating session`);
             // Store the player's name in localStorage
             localStorage.setItem("playerName", playerName);
-
-            // Redirect to the quiz page
-            window.location.href = "quiz.html";
+            
+            // Create a new game session
+            const sessionId = await createGameSession(playerName);
+            if (sessionId) {
+                // Redirect to the quiz page
+                window.location.href = "quiz.html";
+            } else {
+                alert("Failed to create game session. Please try again.");
+            }
         } else {
             alert("Please enter your name before starting the quiz.");
         }
@@ -37,155 +77,4 @@ document.addEventListener("DOMContentLoaded", () => {
     startButton.addEventListener("click", () => {
         window.location.href = "quiz.html"; // Redirect to the quiz page
     });
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Éléments du DOM
-    const playerForm = document.getElementById('player-form');
-    const playerNameInput = document.getElementById('player-name');
-    const difficultySelect = document.getElementById('difficulty');
-    const categorySelect = document.getElementById('category');
-    const questionCountInput = document.getElementById('question-count');
-    const questionCountValue = document.getElementById('question-count-value');
-    const startQuizButton = document.getElementById('start-quiz');
-    const avatarOptions = document.querySelectorAll('.avatar-option');
-    
-    // Variables pour stocker les données du joueur
-    let selectedAvatar = 'user';
-    let playerName = '';
-    let difficulty = 'medium';
-    let category = 'all';
-    let questionCount = 10;
-    
-    // Mise à jour de l'affichage du nombre de questions
-    questionCountInput.addEventListener('input', function() {
-        questionCountValue.textContent = this.value;
-        questionCount = parseInt(this.value);
-    });
-    
-    // Gestion de la sélection d'avatar
-    avatarOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            // Retirer la classe selected de tous les avatars
-            avatarOptions.forEach(opt => opt.classList.remove('selected'));
-            
-            // Ajouter la classe selected à l'avatar cliqué
-            this.classList.add('selected');
-            
-            // Stocker l'avatar sélectionné
-            selectedAvatar = this.getAttribute('data-avatar');
-            
-            // Animation de sélection
-            this.style.transform = 'scale(1.1)';
-            setTimeout(() => {
-                this.style.transform = 'scale(1)';
-            }, 200);
-        });
-    });
-    
-    // Gestion de la soumission du formulaire
-    playerForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Récupérer les valeurs du formulaire
-        playerName = playerNameInput.value.trim();
-        difficulty = difficultySelect.value;
-        category = categorySelect.value;
-        
-        // Vérifier si le nom est vide
-        if (!playerName) {
-            showError('Veuillez entrer votre nom');
-            return;
-        }
-        
-        // Stocker les données du joueur dans le localStorage
-        const playerData = {
-            name: playerName,
-            avatar: selectedAvatar,
-            difficulty: difficulty,
-            category: category,
-            questionCount: questionCount
-        };
-        
-        localStorage.setItem('playerData', JSON.stringify(playerData));
-        
-        // Animation du bouton avant la redirection
-        startQuizButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
-        startQuizButton.disabled = true;
-        
-        // Simuler un délai de chargement
-        setTimeout(() => {
-            // Rediriger vers la page du quiz
-            window.location.href = 'quiz.html';
-        }, 1000);
-    });
-    
-    // Fonction pour afficher une erreur
-    function showError(message) {
-        // Créer un élément d'erreur
-        const errorElement = document.createElement('div');
-        errorElement.className = 'error-message';
-        errorElement.textContent = message;
-        errorElement.style.color = 'var(--error-color)';
-        errorElement.style.marginTop = '10px';
-        errorElement.style.fontSize = '0.9rem';
-        errorElement.style.animation = 'fadeIn 0.3s ease';
-        
-        // Supprimer les messages d'erreur précédents
-        const existingErrors = document.querySelectorAll('.error-message');
-        existingErrors.forEach(error => error.remove());
-        
-        // Ajouter le message d'erreur après le champ de nom
-        playerNameInput.parentNode.appendChild(errorElement);
-        
-        // Mettre en évidence le champ de nom
-        playerNameInput.style.borderColor = 'var(--error-color)';
-        
-        // Supprimer le message d'erreur après 3 secondes
-        setTimeout(() => {
-            errorElement.style.opacity = '0';
-            errorElement.style.transition = 'opacity 0.3s ease';
-            setTimeout(() => {
-                errorElement.remove();
-                playerNameInput.style.borderColor = '';
-            }, 300);
-        }, 3000);
-    }
-    
-    // Animation des cartes de fonctionnalités au survol
-    const featureCards = document.querySelectorAll('.feature-card');
-    
-    featureCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateX(10px)';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateX(0)';
-        });
-    });
-    
-    // Vérifier si des données de joueur existent déjà
-    const savedPlayerData = localStorage.getItem('playerData');
-    if (savedPlayerData) {
-        const playerData = JSON.parse(savedPlayerData);
-        
-        // Pré-remplir le formulaire avec les données sauvegardées
-        playerNameInput.value = playerData.name || '';
-        difficultySelect.value = playerData.difficulty || 'medium';
-        categorySelect.value = playerData.category || 'all';
-        questionCountInput.value = playerData.questionCount || 10;
-        questionCountValue.textContent = questionCountInput.value;
-        
-        // Sélectionner l'avatar sauvegardé
-        const savedAvatar = playerData.avatar || 'user';
-        avatarOptions.forEach(option => {
-            if (option.getAttribute('data-avatar') === savedAvatar) {
-                option.classList.add('selected');
-                selectedAvatar = savedAvatar;
-            } else {
-                option.classList.remove('selected');
-            }
-        });
-    }
 });

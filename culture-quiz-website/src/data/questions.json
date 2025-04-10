@@ -1,109 +1,149 @@
 {
   "questions": [
     {
-      "question": "What is the name of the popular K-Pop group known for their hit song 'Dynamite'?",
-      "options": ["BTS", "Blackpink", "EXO", "Twice"],
-      "answer": "BTS"
+      "question": "Quel film a remporté l'Oscar du meilleur film en 1994 ?",
+      "options": ["Forrest Gump", "Titanic", "Le Parrain", "Schindler's List"],
+      "answer": "Forrest Gump"
     },
     {
-      "question": "Which K-Drama features a love story between a goblin and a human?",
-      "options": ["Goblin", "Crash Landing on You", "Itaewon Class", "Descendants of the Sun"],
-      "answer": "Goblin"
+      "question": "Qui est l'auteur de *Les Misérables* ?",
+      "options": ["Victor Hugo", "Émile Zola", "Albert Camus", "Marcel Proust"],
+      "answer": "Victor Hugo"
     },
     {
-      "question": "What is the traditional Korean dish made of fermented vegetables?",
-      "options": ["Kimchi", "Bibimbap", "Tteokbokki", "Sundubu-jjigae"],
-      "answer": "Kimchi"
+      "question": "Dans quelle ville se trouve la célèbre Tour Eiffel ?",
+      "options": ["Paris", "Lyon", "Marseille", "Nice"],
+      "answer": "Paris"
     },
     {
-      "question": "Which Korean festival celebrates the harvest and is known as Chuseok?",
-      "options": ["Lunar New Year", "Boknal", "Chuseok", "Seollal"],
-      "answer": "Chuseok"
+      "question": "Quel est le nom du personnage principal dans la série *Sherlock* ?",
+      "options": ["Sherlock Holmes", "John Watson", "Mycroft Holmes", "Irene Adler"],
+      "answer": "Sherlock Holmes"
     },
     {
-      "question": "What is the capital city of South Korea?",
-      "options": ["Seoul", "Busan", "Incheon", "Gwangju"],
-      "answer": "Seoul"
+      "question": "Quel est le plus grand océan du monde ?",
+      "options": ["Océan Pacifique", "Océan Atlantique", "Océan Indien", "Océan Arctique"],
+      "answer": "Océan Pacifique"
     },
     {
-      "question": "Which K-Pop artist is known as the 'Queen of K-Pop'?",
-      "options": ["BoA", "IU", "HyunA", "Sunmi"],
-      "answer": "BoA"
+      "question": "Qui a joué le rôle de Jack Dawson dans le film *Titanic* ?",
+      "options": ["Leonardo DiCaprio", "Brad Pitt", "Johnny Depp", "Tom Cruise"],
+      "answer": "Leonardo DiCaprio"
     },
     {
-      "question": "What is the name of the Korean traditional dress?",
-      "options": ["Hanbok", "Kimono", "Cheongsam", "Sari"],
-      "answer": "Hanbok"
+      "question": "Quel est le nom du vaisseau principal dans *Star Trek* ?",
+      "options": ["L'Enterprise", "Le Nostromo", "Le Millennium Falcon", "Le TARDIS"],
+      "answer": "L'Enterprise"
     },
     {
-      "question": "Which K-Drama features a time-traveling romance?",
-      "options": ["The King: Eternal Monarch", "My Love from the Star", "Hotel Del Luna", "W: Two Worlds"],
-      "answer": "W: Two Worlds"
+      "question": "Dans quel pays se trouve la pyramide de Gizeh ?",
+      "options": ["Égypte", "Mexique", "Inde", "Grèce"],
+      "answer": "Égypte"
     },
     {
-      "question": "What is the Korean term for 'thank you'?",
-      "options": ["Annyeong", "Gamsahamnida", "Saranghae", "Jal meokkessseumnida"],
-      "answer": "Gamsahamnida"
+      "question": "Quel est le nom de l'acteur qui incarne James Bond dans *Casino Royale* (2006) ?",
+      "options": ["Daniel Craig", "Sean Connery", "Pierce Brosnan", "Roger Moore"],
+      "answer": "Daniel Craig"
     },
     {
-      "question": "Which K-Pop group is known for their song 'How You Like That'?",
-      "options": ["BTS", "Blackpink", "Red Velvet", "GOT7"],
-      "answer": "Blackpink"
+      "question": "Qui a écrit *Le Petit Prince* ?",
+      "options": ["Antoine de Saint-Exupéry", "Marcel Proust", "Albert Camus", "Jules Verne"],
+      "answer": "Antoine de Saint-Exupéry"
     },
     {
-      "question": "What is the name of the Korean martial art that emphasizes kicking?",
-      "options": ["Taekwondo", "Judo", "Karate", "Hapkido"],
-      "answer": "Taekwondo"
+      "question": "Quel est le plus grand pays du monde par superficie ?",
+      "options": ["Russie", "Canada", "Chine", "États-Unis"],
+      "answer": "Russie"
     },
     {
-      "question": "Which South Korean city is famous for its beaches and nightlife?",
-      "options": ["Seoul", "Busan", "Incheon", "Suwon"],
-      "answer": "Busan"
+      "question": "Quel film a été réalisé par Quentin Tarantino et met en scène un gang de braqueurs ?",
+      "options": ["Reservoir Dogs", "Pulp Fiction", "Kill Bill", "Inglourious Basterds"],
+      "answer": "Reservoir Dogs"
     },
     {
-      "question": "What is the name of the Korean traditional music genre?",
-      "options": ["Gugak", "Pansori", "K-Pop", "Trot"],
-      "answer": "Gugak"
+      "question": "Quel est le nom du super-héros connu pour sa toile d'araignée et son costume rouge ?",
+      "options": ["Spider-Man", "Iron Man", "Batman", "Superman"],
+      "answer": "Spider-Man"
     },
     {
-      "question": "Which K-Drama features a love story between a doctor and a patient?",
-      "options": ["Doctors", "It's Okay to Not Be Okay", "Hospital Playlist", "Romantic Doctor, Teacher Kim"],
-      "answer": "It's Okay to Not Be Okay"
+      "question": "Quel est le nom du premier roman de J.K. Rowling sur Harry Potter ?",
+      "options": ["Harry Potter à l'école des sorciers", "Harry Potter et la Chambre des Secrets", "Harry Potter et l'Ordre du Phénix", "Harry Potter et le Prisonnier d'Azkaban"],
+      "answer": "Harry Potter à l'école des sorciers"
     },
     {
-      "question": "What is the Korean word for 'family'?",
-      "options": ["Gajok", "Chingu", "Hagwon", "Seongsaengnim"],
-      "answer": "Gajok"
+      "question": "Quel est le nom de l'actrice qui interprète Hermione Granger dans les films *Harry Potter* ?",
+      "options": ["Emma Watson", "Natalie Portman", "Keira Knightley", "Jessica Chastain"],
+      "answer": "Emma Watson"
     },
     {
-      "question": "Which K-Pop group debuted with the song 'Like Ooh-Ahh'?",
-      "options": ["Twice", "Red Velvet", "ITZY", "GFRIEND"],
-      "answer": "Twice"
+      "question": "Quel est le nom de la capitale de l'Italie ?",
+      "options": ["Rome", "Milan", "Venise", "Florence"],
+      "answer": "Rome"
     },
     {
-      "question": "What is the name of the Korean holiday that celebrates the first full moon of the lunar year?",
-      "options": ["Seollal", "Chuseok", "Boknal", "Dano"],
-      "answer": "Seollal"
+      "question": "Quel pays est célèbre pour ses fjords et ses paysages montagneux ?",
+      "options": ["Norvège", "Suède", "Finlande", "Danemark"],
+      "answer": "Norvège"
     },
     {
-      "question": "Which K-Drama features a love triangle involving a rich heir and a poor girl?",
-      "options": ["Boys Over Flowers", "My Love from the Star", "Heirs", "Secret Garden"],
-      "answer": "Boys Over Flowers"
+      "question": "Dans quelle série télévisée un groupe de survivants se cache-t-il des zombies ?",
+      "options": ["The Walking Dead", "Stranger Things", "Game of Thrones", "Lost"],
+      "answer": "The Walking Dead"
     },
     {
-      "question": "What is the traditional Korean rice cake called?",
-      "options": ["Tteok", "Banchan", "Kimchi", "Gimbap"],
-      "answer": "Tteok"
+      "question": "Qui a écrit la célèbre citation : \"Je pense, donc je suis\" ?",
+      "options": ["René Descartes", "Voltaire", "Jean-Paul Sartre", "Jean-Jacques Rousseau"],
+      "answer": "René Descartes"
     },
     {
-      "question": "Which K-Pop group is known for their hit song 'Love Scenario'?",
-      "options": ["iKON", "BTS", "EXO", "Seventeen"],
-      "answer": "iKON"
+      "question": "Quel est le nom de la saga de films basée sur les livres de J.R.R. Tolkien ?",
+      "options": ["Le Seigneur des Anneaux", "Harry Potter", "Narnia", "Les Chroniques de Riddick"],
+      "answer": "Le Seigneur des Anneaux"
     },
     {
-      "question": "What is the Korean term for 'friend'?",
-      "options": ["Chingu", "Hagwon", "Gajok", "Seongsaengnim"],
-      "answer": "Chingu"
+      "question": "Qui a réalisé le film *Avatar* sorti en 2009 ?",
+      "options": ["James Cameron", "Steven Spielberg", "George Lucas", "Christopher Nolan"],
+      "answer": "James Cameron"
+    },
+    {
+      "question": "Quel est le nom du célèbre peintre qui a peint *La Nuit étoilée* ?",
+      "options": ["Vincent van Gogh", "Pablo Picasso", "Claude Monet", "Salvador Dalí"],
+      "answer": "Vincent van Gogh"
+    },
+    {
+      "question": "Quel est le nom de la série télévisée qui suit les aventures d'un groupe d'amis à New York ?",
+      "options": ["Friends", "How I Met Your Mother", "The Big Bang Theory", "Seinfeld"],
+      "answer": "Friends"
+    },
+    {
+      "question": "Quel est le nom du personnage principal dans *Le Seigneur des Anneaux* ?",
+      "options": ["Frodon Sacquet", "Gandalf", "Aragorn", "Legolas"],
+      "answer": "Frodon Sacquet"
+    },
+    {
+      "question": "Quel est le nom de la chanteuse connue pour sa chanson *Like a Prayer* ?",
+      "options": ["Madonna", "Beyoncé", "Lady Gaga", "Rihanna"],
+      "answer": "Madonna"
+    },
+    {
+      "question": "Quel est le nom du célèbre détective créé par Arthur Conan Doyle ?",
+      "options": ["Sherlock Holmes", "Hercule Poirot", "Miss Marple", "Philip Marlowe"],
+      "answer": "Sherlock Holmes"
+    },
+    {
+      "question": "Quel est le nom de l'auteur de *1984* et *Animal Farm* ?",
+      "options": ["George Orwell", "Aldous Huxley", "Ray Bradbury", "Isaac Asimov"],
+      "answer": "George Orwell"
+    },
+    {
+      "question": "Quel est le nom du personnage principal dans *Breaking Bad* ?",
+      "options": ["Walter White", "Jesse Pinkman", "Saul Goodman", "Gus Fring"],
+      "answer": "Walter White"
+    },
+    {
+      "question": "*La La Land* est un film musical réalisé par ?",
+      "options": ["Damien Chazelle", "Greta Gerwig", "Christopher Nolan", "Martin Scorsese"],
+      "answer": "*Damien Chazelle*"
     }
   ]
 }
