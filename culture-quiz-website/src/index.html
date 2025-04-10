@@ -13,6 +13,10 @@
         <header>
             <h1><i class="fas fa-brain"></i> Culture Générale Quiz</h1>
             <p>Testez vos connaissances sur l'histoire, la géographie, les sciences, les arts et bien plus encore !</p>
+            <div class="auth-links">
+                <a href="register.html" class="btn btn-outline">Register</a>
+                <a href="login.html" class="btn btn-outline">Login</a>
+            </div>
         </header>
         
         <main>
@@ -69,9 +73,12 @@
                         </div>
                     </div>
                     
-                    <button type="submit" id="start-quiz" class="btn primary-btn">
-                        <i class="fas fa-play"></i> Commencer le quiz
-                    </button>
+                    <h2>Play as Guest</h2>
+                    <form id="player-form">
+                        <label for="player-name">Enter your name:</label>
+                        <input type="text" id="player-name" name="player-name" required>
+                        <button type="submit" id="start-quiz">Start Quiz</button>
+                    </form>
                 </form>
             </div>
             
