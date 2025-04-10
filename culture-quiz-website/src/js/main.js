@@ -32,6 +32,15 @@ async function createGameSession(playerName) {
 document.addEventListener("DOMContentLoaded", () => {
     console.log('DOM loaded - initializing form');
     const playerForm = document.getElementById("player-form");
+    const questionCountSlider = document.getElementById("question-count");
+    const questionCountValue = document.getElementById("question-count-value");
+    
+    // Update the question count display when slider is moved
+    if (questionCountSlider && questionCountValue) {
+        questionCountSlider.addEventListener("input", () => {
+            questionCountValue.textContent = questionCountSlider.value;
+        });
+    }
     
     if (!playerForm) {
         console.error('Player form not found');
@@ -52,6 +61,18 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log(`Creating session for player: ${playerName}`);
             localStorage.setItem("playerName", playerName);
             
+            // Get and store quiz preferences
+            const questionCount = document.getElementById("question-count").value;
+            const difficulty = document.getElementById("difficulty").value;
+            const category = document.getElementById("category").value;
+            
+            // Store quiz preferences in localStorage
+            localStorage.setItem("questionCount", questionCount);
+            localStorage.setItem("difficulty", difficulty);
+            localStorage.setItem("category", category);
+            
+            console.log(`Quiz preferences: ${questionCount} questions, ${difficulty} difficulty, ${category} category`);
+            
             try {
                 // Create session with proper error handling
                 const response = await fetch('http://localhost:5000/api/sessions/create', {
@@ -59,7 +80,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ userId: playerName })
+                    body: JSON.stringify({ 
+                        userId: playerName,
+                        questionCount,
+                        difficulty,
+                        category
+                    })
                 });
                 
                 if (!response.ok) {

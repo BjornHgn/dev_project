@@ -79,14 +79,20 @@ async function loadQuestions() {
     return data.questions; // Ensure you return the "questions" array
 }
 
-// Start the quiz
+// Modify the startQuiz function to use the question count
 async function startQuiz() {
     const playerName = localStorage.getItem("playerName");
-    updateScoreboard(playerName, 0); // Add the player to the scoreboard with an initial score of 0
-
+    const questionCount = parseInt(localStorage.getItem("questionCount") || "10");
+    
+    updateScoreboard(playerName, 0);
+    
     const questions = await loadQuestions();
     const shuffledQuestions = shuffleArray(questions);
-    window.quizQuestions = shuffledQuestions;
+    
+    // Limit questions to the selected count
+    window.quizQuestions = shuffledQuestions.slice(0, questionCount);
+    console.log(`Starting quiz with ${window.quizQuestions.length} questions`);
+    
     displayQuestion(window.quizQuestions[currentQuestionIndex]);
     startTimer();
 }
@@ -120,10 +126,16 @@ function displayQuestion(question) {
         playerNameSpan.textContent = localStorage.getItem("playerName") || "Guest";
     }
     
+    // Shuffle the answer options
+    const shuffledOptions = shuffleArray([...question.options]);
+    
+    // Store the shuffled options on the window object for later reference
+    window.currentShuffledOptions = shuffledOptions;
+    
     quizContainer.innerHTML = `
         <h2 id="question">${question.question}</h2>
         <ul>
-            ${question.options.map((option, index) => `
+            ${shuffledOptions.map((option, index) => `
                 <li>
                     <input type="radio" name="answer" value="${option}" id="option${index}">
                     <label for="option${index}">${option}</label>
@@ -339,7 +351,7 @@ function shuffleArray(array) {
         const j = Math.floor(Math.random() * (i + 1));
         [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
     }
-    return array;
+    return newArray; // Return the shuffled copy, not the original array
 }
 document.addEventListener('DOMContentLoaded', () => {
 startQuiz();
