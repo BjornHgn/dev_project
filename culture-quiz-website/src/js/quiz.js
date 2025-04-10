@@ -39,22 +39,38 @@ document.getElementById('get-hint').addEventListener('click', async () => {
     document.getElementById('hint-container').textContent = data.hint;
 });
 
+// Replace the hardcoded session ID with the one from localStorage
 document.addEventListener('DOMContentLoaded', () => {
     const playerName = localStorage.getItem("playerName");
+    const sessionId = localStorage.getItem("sessionId") || "default-session";
+    
     if (!playerName) {
         alert("Please enter your name before starting the quiz.");
         window.location.href = "index.html";
         return;
     }
 
-    console.log(`Player Name: ${playerName}`); // Debugging: Ensure the name is retrieved
-    socket.emit('joinSession', { sessionId: 'example-session-id', userId: playerName });
-
-    // Add the player to the scoreboard with an initial score of 0
+    console.log(`Player: ${playerName}, Session: ${sessionId}`);
+    
+    // Join the session with the stored session ID
+    socket.emit('joinSession', { sessionId: sessionId, userId: playerName });
+    
+    // Update score events
+    socket.on('scoreUpdated', (data) => {
+        updateScoreboard(data.playerName, data.playerScore);
+    });
+    
+    // Add the player to the scoreboard
     updateScoreboard(playerName, 0);
-
+    
     startQuiz();
 });
+
+// Update the endGame function
+function endGame() {
+    const sessionId = localStorage.getItem("sessionId") || "default-session";
+    socket.emit('endGame', { sessionId: sessionId });
+}
 
 // Load questions from JSON file
 async function loadQuestions() {
