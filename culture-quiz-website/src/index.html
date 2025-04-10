@@ -1,25 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>K-Culture Quiz</title>
+    <title>Culture Générale Quiz - Accueil</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Welcome to the K-Culture Quiz!</h1>
-            <p>Test your knowledge about Korean culture, including music, dramas, history, language, and traditions.</p>
+            <h1><i class="fas fa-brain"></i> Culture Générale Quiz</h1>
+            <p>Testez vos connaissances sur l'histoire, la géographie, les sciences, les arts et bien plus encore !</p>
         </header>
+        
         <main>
-            <form id="player-form">
-                <label for="player-name">Enter your name:</label>
-                <input type="text" id="player-name" name="player-name" required>
-                <button type="submit" id="start-quiz">Start Quiz</button>
-            </form>
+            <div class="welcome-card">
+                <div class="avatar-selection">
+                    <h2>Choisissez votre avatar</h2>
+                    <div class="avatar-options">
+                        <div class="avatar-option selected" data-avatar="user">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="avatar-option" data-avatar="star">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="avatar-option" data-avatar="rocket">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div class="avatar-option" data-avatar="crown">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="player-form">
+                    <div class="form-group">
+                        <label for="player-name">Entrez votre nom :</label>
+                        <input type="text" id="player-name" name="player-name" required placeholder="Votre nom">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="difficulty">Niveau de difficulté :</label>
+                        <select id="difficulty" name="difficulty">
+                            <option value="easy">Facile</option>
+                            <option value="medium" selected>Moyen</option>
+                            <option value="hard">Difficile</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Catégorie :</label>
+                        <select id="category" name="category">
+                            <option value="all" selected>Toutes les catégories</option>
+                            <option value="history">Histoire</option>
+                            <option value="geography">Géographie</option>
+                            <option value="science">Sciences</option>
+                            <option value="arts">Arts</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="question-count">Nombre de questions :</label>
+                        <div class="slider-container">
+                            <input type="range" id="question-count" name="question-count" min="5" max="20" value="10" step="5">
+                            <span id="question-count-value">10</span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" id="start-quiz" class="btn primary-btn">
+                        <i class="fas fa-play"></i> Commencer le quiz
+                    </button>
+                </form>
+            </div>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <i class="fas fa-trophy"></i>
+                    <div class="feature-card-content">
+                        <h3>Classement</h3>
+                        <p>Comparez votre score avec d'autres joueurs et grimpez dans le classement</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-lightbulb"></i>
+                    <div class="feature-card-content">
+                        <h3>Indices</h3>
+                        <p>Utilisez des indices pour vous aider à répondre aux questions difficiles</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-clock"></i>
+                    <div class="feature-card-content">
+                        <h3>Chronomètre</h3>
+                        <p>Répondez rapidement pour gagner des points bonus et améliorer votre score</p>
+                    </div>
+                </div>
+            </div>
         </main>
+        
+        <footer>
+            <p>&copy; 2023 Culture Générale Quiz - Tous droits réservés</p>
+        </footer>
     </div>
+    
     <script src="js/main.js"></script>
 </body>
 </html>

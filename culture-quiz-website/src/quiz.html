@@ -1,31 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>K-Culture Quiz</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>Culture Générale Quiz</title>
+    <link rel="stylesheet" href="css/quiz.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="quiz-container">
-        <h1>Culture Quiz</h1>
+        <header>
+            <h1><i class="fas fa-brain"></i> Culture Générale Quiz</h1>
+            <div class="player-info">
+                <span id="player-name"></span>
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </header>
 
-                <!-- Scoreboard -->
-        <div id="scoreboard">
-            <h2>Scoreboard</h2>
-            <ul id="scoreboard-list">
-                <!-- Player scores will be dynamically added here -->
-            </ul>
+        <div class="quiz-progress">
+            <div class="progress-bar">
+                <div id="progress-fill"></div>
+            </div>
+            <div class="progress-text">
+                <span id="current-question">1</span> / <span id="total-questions">10</span>
+            </div>
         </div>
 
+        <div class="main-content">
+            <section id="scoreboard">
+                <h2><i class="fas fa-trophy"></i> Classement</h2>
+                <ul id="scoreboard-list"></ul>
+            </section>
 
-        <div id="quiz"></div> <!-- This is where questions will be displayed -->
-        <div id="hint-container"></div> <!-- This is where hints will be displayed -->
-        <div id="timer">Time left: <span id="time">30</span> seconds</div>
-        <button id="get-hint">Get Hint</button>
-        <button id="submit">Submit Answer</button> <!-- Submit button -->
-        <div id="results"></div> <!-- This is where results will be displayed -->
+            <section id="quiz">
+                <!-- Questions will be dynamically inserted here -->
+            </section>
+
+            <section id="hint-container">
+                <div class="hint-header">
+                    <i class="fas fa-lightbulb"></i> Indice
+                </div>
+                <div class="hint-content">
+                    <!-- Hints will be dynamically inserted here -->
+                </div>
+            </section>
+        </div>
+
+        <div class="right-sidebar">
+            <div class="timer-container">
+                <div id="timer">
+                    <i class="fas fa-clock"></i>
+                    <div>Temps restant:</div>
+                    <div id="time">30</div>
+                    <div>secondes</div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button id="get-hint" class="btn hint-btn"><i class="fas fa-lightbulb"></i> Obtenir un indice</button>
+                <button id="submit" class="btn submit-btn"><i class="fas fa-check"></i> Valider</button>
+            </div>
+        </div>
+
+        <section id="results">
+            <!-- Results will be dynamically inserted here -->
+        </section>
+
+        <div class="quiz-controls">
+            <button id="restart-quiz" class="btn restart-btn"><i class="fas fa-redo"></i> Recommencer</button>
+            <button id="share-results" class="btn share-btn"><i class="fas fa-share-alt"></i> Partager</button>
+        </div>
     </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title"></h2>
+            <div id="modal-body"></div>
+            <div class="modal-buttons">
+                <button id="modal-confirm" class="btn">Confirmer</button>
+                <button id="modal-cancel" class="btn">Annuler</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script type="module" src="js/quiz.js"></script>
 </body>
