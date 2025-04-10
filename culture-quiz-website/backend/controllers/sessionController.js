@@ -3,18 +3,31 @@ const { generateSessionId } = require('../utils/generators');
 
 const createSession = async (req, res) => {
     const { userId } = req.body;
+    
+    // Add validation
+    if (!userId) {
+        return res.status(400).json({ error: 'UserId is required' });
+    }
+    
     try {
+        console.log('Creating session for user:', userId);
+        
         // Generate a random session ID
         const sessionId = generateSessionId();
+        console.log('Generated sessionId:', sessionId);
         
         // Create and save the session with the generated ID
         const session = new Session({ 
             sessionId, 
             players: [userId],
+            scores: [{ playerName: userId, score: 0 }], // Initialize with a score of 0
+            isActive: true,
             createdAt: new Date()
         });
         
+        console.log('Saving session:', session);
         await session.save();
+        console.log('Session saved successfully');
         
         res.status(201).json({ 
             message: 'Session created successfully', 
@@ -26,7 +39,7 @@ const createSession = async (req, res) => {
         });
     } catch (error) {
         console.error('Error creating session:', error);
-        res.status(500).json({ error: 'Error creating session' });
+        res.status(500).json({ error: `Error creating session: ${error.message}` });
     }
 };
 

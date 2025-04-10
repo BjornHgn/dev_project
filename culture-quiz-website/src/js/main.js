@@ -1,15 +1,10 @@
 // Main JavaScript file for the K-Culture Quiz Website
 
-// Function to initialize the application
-function init() {
-    // Check if the user is on the homepage
-    if (window.location.pathname === '/index.html') {
-        document.getElementById('start-button').addEventListener('click', startQuiz);
-    }
-}
-
+// Improve the createGameSession function
 async function createGameSession(playerName) {
     try {
+        console.log('Attempting to create game session for:', playerName);
+        
         const response = await fetch('http://localhost:5000/api/sessions/create', {
             method: 'POST',
             headers: {
@@ -19,11 +14,12 @@ async function createGameSession(playerName) {
         });
         
         const data = await response.json();
+        console.log('Server response:', data);
         
         if (response.ok) {
             // Store the session ID in localStorage
             localStorage.setItem('sessionId', data.session.sessionId);
-            console.log('Created session:', data.session.sessionId);
+            console.log('Created session with ID:', data.session.sessionId);
             return data.session.sessionId;
         } else {
             console.error('Failed to create session:', data.error);
@@ -31,18 +27,34 @@ async function createGameSession(playerName) {
         }
     } catch (error) {
         console.error('Error creating session:', error);
+        console.error('Network error details:', error.message);
         return null;
     }
 }
 
+// SINGLE event listener for DOMContentLoaded - REMOVE ALL OTHERS
 document.addEventListener("DOMContentLoaded", () => {
+    console.log('DOM fully loaded - initializing form handler');
     const playerForm = document.getElementById("player-form");
+    
+    if (!playerForm) {
+        console.error('Player form not found in the document!');
+        return;
+    }
 
     playerForm.addEventListener("submit", async (event) => {
         event.preventDefault(); // Prevent the form from refreshing the page
+        console.log('Form submitted');
 
-        const playerName = document.getElementById("player-name").value.trim();
+        const playerNameInput = document.getElementById("player-name");
+        if (!playerNameInput) {
+            console.error('Player name input not found!');
+            return;
+        }
+
+        const playerName = playerNameInput.value.trim();
         if (playerName) {
+            console.log(`Player name: ${playerName} - creating session`);
             // Store the player's name in localStorage
             localStorage.setItem("playerName", playerName);
             
@@ -57,36 +69,5 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             alert("Please enter your name before starting the quiz.");
         }
-    });
-});
-
-// Function to navigate to the quiz page
-function startQuiz() {
-    window.location.href = 'quiz.html';
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    const playerForm = document.getElementById("player-form");
-
-    playerForm.addEventListener("submit", (event) => {
-        event.preventDefault(); // Prevent the form from refreshing the page
-
-        const playerName = document.getElementById("player-name").value.trim();
-        if (playerName) {
-            // Store the player's name in localStorage
-            localStorage.setItem("playerName", playerName);
-
-            // Redirect to the quiz page
-            window.location.href = "quiz.html";
-        } else {
-            alert("Please enter your name before starting the quiz.");
-        }
-    });
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-    const startButton = document.getElementById("start-quiz");
-    startButton.addEventListener("click", () => {
-        window.location.href = "quiz.html"; // Redirect to the quiz page
     });
 });
