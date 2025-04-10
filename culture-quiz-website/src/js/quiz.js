@@ -267,7 +267,6 @@ function shuffleArray(array) {
     }
     return array;
 }
-
 document.addEventListener('DOMContentLoaded', () => {
 startQuiz();
 });
