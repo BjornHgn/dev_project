@@ -22,6 +22,9 @@ const closeModal = document.querySelector('.close');
 let currentQuestionIndex = 0;
 let score = 0;
 let timer;
+// Add these variable declarations at the top with your other variables
+let hintsUsed = 0;
+const maxHints = 3; // Maximum number of hints a player can use
 const timeLimit = 15; // seconds for each question
 const socket = io('http://localhost:5000'); // Connect to the backend server
 
@@ -99,9 +102,24 @@ function generateFallbackSessionId() {
     return result;
 }
 
-// Display the current question with validation
+// Update the displayQuestion function
 function displayQuestion(question) {
-    console.log('Displaying question:', question); // Debugging
+    console.log('Displaying question:', question);
+    
+    // Update progress bar
+    const totalQuestions = window.quizQuestions.length;
+    const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+    progressFill.style.width = `${progress}%`;
+    
+    // Update question counter
+    currentQuestionSpan.textContent = currentQuestionIndex + 1;
+    totalQuestionsSpan.textContent = totalQuestions;
+    
+    // Update player name if not set already
+    if (playerNameSpan && !playerNameSpan.textContent) {
+        playerNameSpan.textContent = localStorage.getItem("playerName") || "Guest";
+    }
+    
     quizContainer.innerHTML = `
         <h2 id="question">${question.question}</h2>
         <ul>
@@ -114,12 +132,21 @@ function displayQuestion(question) {
         </ul>
     `;
     
-    // Hide hint container for new question
+    // Handle hints
     hintContainer.style.display = 'none';
     hintContainer.classList.remove('visible');
     
-    // Reset hint button
-    getHintButton.innerHTML = `<i class="fas fa-lightbulb"></i> Obtenir un indice (${maxHints - hintsUsed} restants)`;
+    // Fix undefined variables by defining them if not already defined
+    if (typeof hintsUsed === 'undefined') {
+        window.hintsUsed = 0;
+    }
+    
+    if (typeof maxHints === 'undefined') {
+        window.maxHints = 3; // Default to 3 hints total
+    }
+    
+    // Update hint button
+    getHintButton.innerHTML = `<i class="fas fa-lightbulb"></i> Obtenir un indice`;
     getHintButton.disabled = false;
 }
 
@@ -174,7 +201,33 @@ function checkAnswer(answer) {
     }
 }
 
-// Start the timer
+// Add this function to your file
+function showModal(title, message) {
+    modalTitle.textContent = title;
+    modalBody.textContent = message;
+    modal.style.display = 'block';
+    
+    // Close modal handlers
+    closeModal.onclick = () => {
+        modal.style.display = 'none';
+    };
+    
+    modalCancel.onclick = () => {
+        modal.style.display = 'none';
+    };
+    
+    modalConfirm.onclick = () => {
+        modal.style.display = 'none';
+    };
+    
+    window.onclick = (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
+// Fix the startTimer function
 function startTimer() {
     // Clear any existing timer
     clearInterval(timer);
@@ -183,7 +236,7 @@ function startTimer() {
     timeSpan.textContent = timeLeft;
     timerDisplay.classList.remove('warning');
 
-    // Start a new timer
+    // Start a new timer - FIXED implementation
     timer = setInterval(() => {
         timeLeft--;
         timeSpan.textContent = timeLeft;
