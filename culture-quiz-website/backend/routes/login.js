@@ -72,4 +72,35 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Login failed. Please try again later.');
         }
     });
+    
+    // Add login form validation
+    const passwordInput = document.getElementById('password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', () => {
+            const password = passwordInput.value;
+            const strengthIndicator = document.getElementById('password-strength');
+            
+            if (strengthIndicator) {
+                if (password.length < 6) {
+                    strengthIndicator.textContent = 'Weak';
+                    strengthIndicator.className = 'password-weak';
+                } else if (password.length < 10) {
+                    strengthIndicator.textContent = 'Medium';
+                    strengthIndicator.className = 'password-medium';
+                } else {
+                    strengthIndicator.textContent = 'Strong';
+                    strengthIndicator.className = 'password-strong';
+                }
+            }
+        });
+    }
+    
+    // Add "forgot password" functionality if available
+    const forgotPasswordLink = document.getElementById('forgot-password');
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Password recovery feature not implemented yet.');
+        });
+    }
 });

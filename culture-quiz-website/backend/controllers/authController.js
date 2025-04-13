@@ -2,7 +2,6 @@ const User = require('../models/userModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-// Add username check and better error handling to registerUser
 const registerUser = async (req, res) => {
     const { username, password } = req.body;
     
@@ -17,13 +16,23 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ error: 'Username already exists' });
         }
         
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new User({ username, password: hashedPassword });
+        // Hash the password with a stronger salt round (12)
+        const hashedPassword = await bcrypt.hash(password, 12);
+        
+        // Set role to user by default
+        const user = new User({ 
+            username, 
+            password: hashedPassword,
+            role: 'user'  // Default role
+        });
+        
         await user.save();
+        console.log('User registered successfully:', username);
         
         res.status(201).json({ 
             message: 'User registered successfully',
-            userId: user._id
+            userId: user._id,
+            username: user.username
         });
     } catch (error) {
         console.error('Registration error:', error);
@@ -31,21 +40,39 @@ const registerUser = async (req, res) => {
     }
 };
 
-// Update loginUser to return username and token
 const loginUser = async (req, res) => {
     const { username, password } = req.body;
     try {
+        console.log('Login attempt for user:', username);
+        
         const user = await User.findOne({ username });
-        if (!user) return res.status(404).json({ error: 'User not found' });
+        if (!user) {
+            console.log('User not found:', username);
+            return res.status(404).json({ error: 'User not found' });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+        if (!isMatch) {
+            console.log('Invalid password for user:', username);
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
 
-        const token = jwt.sign({ id: user._id }, 'your_jwt_secret', { expiresIn: '1h' });
+        // Create JWT token with user's ID and role
+        const token = jwt.sign({ 
+            id: user._id, 
+            role: user.role 
+        }, 'your_jwt_secret', { 
+            expiresIn: '1h' 
+        });
+        
+        console.log('User logged in successfully:', username, 'with role:', user.role);
+        
+        // Include role in the response for front-end to handle
         res.json({ 
             token,
             username: user.username,
-            userId: user._id
+            userId: user._id,
+            role: user.role  // Include the user's role
         });
     } catch (error) {
         console.error('Login error:', error);

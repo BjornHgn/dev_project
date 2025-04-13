@@ -1,0 +1,303 @@
+website\src\admin.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Quiz Management</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        <nav class="admin-sidebar">
+            <div class="admin-logo">
+                <i class="fas fa-brain"></i>
+                <h2>Quiz Admin</h2>
+            </div>
+            <ul class="admin-menu">
+                <li class="active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li data-tab="questions">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Questions</span>
+                </li>
+                <li data-tab="users">
+                    <i class="fas fa-users"></i>
+                    <span>Users</span>
+                </li>
+                <li data-tab="sessions">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Sessions</span>
+                </li>
+                <li class="logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </li>
+            </ul>
+        </nav>
+        
+        <main class="admin-content">
+            <header class="admin-header">
+                <div class="admin-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="admin-user">
+                    <span id="admin-username">Admin</span>
+                    <div class="admin-avatar">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="admin-tab-content">
+                <!-- Dashboard Tab -->
+                <section id="dashboard" class="tab-pane active">
+                    <h1>Dashboard</h1>
+                    <div class="stat-cards">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Total Questions</h3>
+                                <p id="question-count">Loading...</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Total Users</h3>
+                                <p id="user-count">Loading...</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-gamepad"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Active Sessions</h3>
+                                <p id="session-count">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-chart">
+                        <h3>Recent Activity</h3>
+                        <div id="activity-chart">
+                            <p>Loading chart data...</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Questions Tab -->
+                <section id="questions" class="tab-pane">
+                    <div class="tab-header">
+                        <h1>Manage Questions</h1>
+                        <button id="add-question-btn" class="admin-btn">
+                            <i class="fas fa-plus"></i> Add Question
+                        </button>
+                    </div>
+                    <div class="admin-table-container">
+                        <table class="admin-table" id="questions-table">
+                            <thead>
+                                <tr>
+                                    <th>Question</th>
+                                    <th>Category</th>
+                                    <th>Options</th>
+                                    <th>Answer</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Questions will be loaded dynamically -->
+                                <tr>
+                                    <td colspan="5" class="loading-message">Loading questions...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- Users Tab -->
+                <section id="users" class="tab-pane">
+                    <div class="tab-header">
+                        <h1>Manage Users</h1>
+                        <button id="add-user-btn" class="admin-btn">
+                            <i class="fas fa-plus"></i> Add User
+                        </button>
+                    </div>
+                    <div class="admin-table-container">
+                        <table class="admin-table" id="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Registration Date</th>
+                                    <th>Sessions</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Users will be loaded dynamically -->
+                                <tr>
+                                    <td colspan="4" class="loading-message">Loading users...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- Sessions Tab -->
+                <section id="sessions" class="tab-pane">
+                    <div class="tab-header">
+                        <h1>Game Sessions</h1>
+                    </div>
+                    <div class="admin-table-container">
+                        <table class="admin-table" id="sessions-table">
+                            <thead>
+                                <tr>
+                                    <th>Session ID</th>
+                                    <th>Players</th>
+                                    <th>Created</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Sessions will be loaded dynamically -->
+                                <tr>
+                                    <td colspan="5" class="loading-message">Loading sessions...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal for adding/editing questions -->
+    <div class="admin-modal" id="question-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="question-modal-title">Add Question</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="question-form">
+                    <input type="hidden" id="question-id">
+                    <div class="form-group">
+                        <label for="question-text">Question:</label>
+                        <textarea id="question-text" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="question-category">Category:</label>
+                        <select id="question-category">
+                            <option value="general">General</option>
+                            <option value="history">History</option>
+                            <option value="geography">Geography</option>
+                            <option value="science">Science</option>
+                            <option value="arts">Arts</option>
+                        </select>
+                    </div>
+                    <div class="form-group options-group">
+                        <label>Options:</label>
+                        <div class="option-inputs">
+                            <div class="option-input">
+                                <input type="text" class="option-text" required>
+                                <span class="delete-option"><i class="fas fa-times"></i></span>
+                            </div>
+                            <div class="option-input">
+                                <input type="text" class="option-text" required>
+                                <span class="delete-option"><i class="fas fa-times"></i></span>
+                            </div>
+                            <div class="option-input">
+                                <input type="text" class="option-text" required>
+                                <span class="delete-option"><i class="fas fa-times"></i></span>
+                            </div>
+                            <div class="option-input">
+                                <input type="text" class="option-text" required>
+                                <span class="delete-option"><i class="fas fa-times"></i></span>
+                            </div>
+                        </div>
+                        <button type="button" id="add-option-btn" class="admin-btn btn-small">
+                            <i class="fas fa-plus"></i> Add Option
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label for="question-answer">Correct Answer:</label>
+                        <select id="question-answer"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="question-image">Image URL (Optional):</label>
+                        <input type="text" id="question-image">
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="submit" class="admin-btn">Save Question</button>
+                        <button type="button" class="admin-btn btn-cancel">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for adding/editing users -->
+    <div class="admin-modal" id="user-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="user-modal-title">Add User</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="user-form">
+                    <input type="hidden" id="user-id">
+                    <div class="form-group">
+                        <label for="user-username">Username:</label>
+                        <input type="text" id="user-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-password">Password:</label>
+                        <input type="password" id="user-password">
+                        <small>Leave blank to keep current password when editing</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-role">Role:</label>
+                        <select id="user-role">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="submit" class="admin-btn">Save User</button>
+                        <button type="button" class="admin-btn btn-cancel">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="admin-modal" id="confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Confirmation</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">Are you sure you want to delete this item?</p>
+                <div class="modal-buttons">
+                    <button id="confirm-yes" class="admin-btn btn-danger">Yes, Delete</button>
+                    <button id="confirm-no" class="admin-btn btn-cancel">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
