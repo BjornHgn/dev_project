@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Submissions - Culture Générale Quiz</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-clipboard-list"></i> My Question Submissions</h1>
+            <p>Track the status of your submitted questions</p>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="quiz.html">Play Quiz</a></li>
+                    <li><a href="submit-question.html">Submit New Question</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="submissions-container">
+                <div class="submissions-header">
+                    <h2>My Submissions</h2>
+                    <div class="status-filter">
+                        <button class="status-btn active" data-status="all">All</button>
+                        <button class="status-btn" data-status="pending">Pending</button>
+                        <button class="status-btn" data-status="approved">Approved</button>
+                        <button class="status-btn" data-status="rejected">Rejected</button>
+                    </div>
+                </div>
+                
+                <div id="submissions-list">
+                    <p class="loading-message">Loading your submissions...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="js/my-submissions.js"></script>
+</body>
+</html>

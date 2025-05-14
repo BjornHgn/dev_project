@@ -5,6 +5,7 @@ const User = require('../models/userModel');
 const Session = require('../models/sessionModel');
 const { protect } = require('../middleware/authMiddleware');
 const adminController = require('../controllers/adminController');
+const PendingQuestion = require('../models/pendingQuestionModel');
 
 // Define isAdmin middleware BEFORE using it
 const isAdmin = async (req, res, next) => {
@@ -106,5 +107,18 @@ router.post('/import-questions', async (req, res) => {
         });
     }
 });
+
+router.get('/pending-questions', async (req, res) => {
+    try {
+        const pendingQuestions = await PendingQuestion.find({ status: 'pending' })
+            .sort({ createdAt: -1 });
+        res.json(pendingQuestions);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching pending questions' });
+    }
+});
+
+router.put('/pending-questions/:id/approve', adminController.approveQuestion);
+router.put('/pending-questions/:id/reject', adminController.rejectQuestion);
 
 module.exports = router;

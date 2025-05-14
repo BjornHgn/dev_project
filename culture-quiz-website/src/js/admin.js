@@ -24,6 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Set up session management
     loadSessions();
+
+    loadPendingQuestions();
     
     // Set up logout functionality
     document.querySelector('.logout').addEventListener('click', () => {
@@ -721,4 +723,159 @@ function showNotification(message, type) {
             notification.remove();
         }, 300);
     }, 3000);
+}
+
+// Add this function to load and manage pending questions
+async function loadPendingQuestions() {
+    try {
+        const response = await fetch('http://localhost:5000/api/admin/pending-questions', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch pending questions');
+        
+        const pendingQuestions = await response.json();
+        const container = document.getElementById('pending-questions-container');
+        
+        if (pendingQuestions.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-check-circle"></i>
+                    <p>No pending questions to review.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = pendingQuestions.map(question => `
+            <div class="pending-question-card" data-id="${question._id}">
+                <div class="pending-question-header">
+                    <h3>${question.question}</h3>
+                    <span class="submitted-by">
+                        Submitted by: ${question.submittedBy.username}
+                    </span>
+                </div>
+                <div class="pending-question-details">
+                    <p><strong>Category:</strong> ${question.category}</p>
+                    <p><strong>Options:</strong></p>
+                    <ul class="options-list">
+                        ${question.options.map(option => `
+                            <li class="${option === question.answer ? 'correct' : ''}">${option} ${option === question.answer ? '✓' : ''}</li>
+                        `).join('')}
+                    </ul>
+                    <p><strong>Submitted:</strong> ${new Date(question.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div class="pending-question-actions">
+                    <button class="admin-btn btn-success approve-btn" data-id="${question._id}">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button class="admin-btn btn-danger reject-btn" data-id="${question._id}">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+        // Add event listeners
+        document.querySelectorAll('.approve-btn').forEach(btn => {
+            btn.addEventListener('click', () => approveQuestion(btn.dataset.id));
+        });
+        
+        document.querySelectorAll('.reject-btn').forEach(btn => {
+            btn.addEventListener('click', () => openRejectModal(btn.dataset.id));
+        });
+        
+    } catch (error) {
+        console.error('Error loading pending questions:', error);
+        document.getElementById('pending-questions-container').innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Failed to load pending questions. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+// Approve a question
+async function approveQuestion(id) {
+    try {
+        const response = await fetch(`http://localhost:5000/api/admin/pending-questions/${id}/approve`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to approve question');
+        
+        showNotification('Question approved successfully', 'success');
+        loadPendingQuestions();
+        loadQuestions(); // Refresh the questions list too
+    } catch (error) {
+        console.error('Error approving question:', error);
+        showNotification('Failed to approve question', 'error');
+    }
+}
+
+// Open rejection modal
+function openRejectModal(id) {
+    const modal = document.createElement('div');
+    modal.className = 'admin-modal';
+    modal.id = 'reject-modal';
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Reject Question</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Please provide feedback for the user:</p>
+                <textarea id="reject-feedback" placeholder="Reason for rejection..."></textarea>
+                <div class="modal-buttons">
+                    <button id="confirm-reject" class="admin-btn btn-danger">Reject Question</button>
+                    <button id="cancel-reject" class="admin-btn btn-cancel">Cancel</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+    
+    // Close modal events
+    modal.querySelector('.close-modal').onclick = () => {
+        document.body.removeChild(modal);
+    };
+    
+    modal.querySelector('#cancel-reject').onclick = () => {
+        document.body.removeChild(modal);
+    };
+    
+    // Confirm reject
+    modal.querySelector('#confirm-reject').onclick = async () => {
+        const feedback = document.getElementById('reject-feedback').value.trim();
+        
+        try {
+            const response = await fetch(`http://localhost:5000/api/admin/pending-questions/${id}/reject`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ feedback })
+            });
+            
+            if (!response.ok) throw new Error('Failed to reject question');
+            
+            showNotification('Question rejected', 'success');
+            document.body.removeChild(modal);
+            loadPendingQuestions();
+        } catch (error) {
+            console.error('Error rejecting question:', error);
+            showNotification('Failed to reject question', 'error');
+        }
+    };
 }

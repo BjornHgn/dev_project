@@ -12,6 +12,7 @@ const adminRoutes = require('./routes/admin');
 const fs = require('fs');
 const path = require('path');
 const Question = require('./models/questionModel');
+const questionRoutes = require('./routes/questions');
 
 // Initialize Express app
 const app = express();
@@ -62,6 +63,7 @@ connectDB().then(async () => {
     app.use('/api/game', gameRoutes);
     app.use('/api/ai', aiRoutes);
     app.use('/api/admin', adminRoutes);
+    app.use('/api/questions', questionRoutes);
     
     // Socket.io connection handling
     io.on('connection', (socket) => {

@@ -2,6 +2,7 @@ const Question = require('../models/questionModel');
 const User = require('../models/userModel');
 const Session = require('../models/sessionModel');
 const bcrypt = require('bcrypt');
+const PendingQuestion = require('../models/pendingQuestionModel');
 
 // Dashboard statistics
 const getDashboardStats = async (req, res) => {
@@ -172,6 +173,71 @@ const deleteUser = async (req, res) => {
     }
 };
 
+// Add these functions to your exports
+const approveQuestion = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Find the pending question
+        const pendingQuestion = await PendingQuestion.findById(id);
+        if (!pendingQuestion) {
+            return res.status(404).json({ error: 'Pending question not found' });
+        }
+        
+        // Create a new question from the pending question
+        const newQuestion = new Question({
+            question: pendingQuestion.question,
+            options: pendingQuestion.options,
+            answer: pendingQuestion.answer,
+            category: pendingQuestion.category,
+            imageUrl: pendingQuestion.imageUrl
+        });
+        
+        await newQuestion.save();
+        
+        // Update the pending question status
+        pendingQuestion.status = 'approved';
+        await pendingQuestion.save();
+        
+        res.json({ 
+            message: 'Question approved and added to database',
+            question: newQuestion
+        });
+    } catch (error) {
+        console.error('Error approving question:', error);
+        res.status(500).json({ error: 'Error approving question' });
+    }
+};
+
+const rejectQuestion = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { feedback } = req.body;
+        
+        // Find and update the pending question
+        const pendingQuestion = await PendingQuestion.findByIdAndUpdate(
+            id,
+            { 
+                status: 'rejected',
+                adminFeedback: feedback || 'Does not meet our quality guidelines.' 
+            },
+            { new: true }
+        );
+        
+        if (!pendingQuestion) {
+            return res.status(404).json({ error: 'Pending question not found' });
+        }
+        
+        res.json({ 
+            message: 'Question rejected',
+            question: pendingQuestion
+        });
+    } catch (error) {
+        console.error('Error rejecting question:', error);
+        res.status(500).json({ error: 'Error rejecting question' });
+    }
+};
+
 // Export all functions
 module.exports = {
     getDashboardStats,
@@ -180,5 +246,7 @@ module.exports = {
     deleteQuestion,
     createUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    approveQuestion,
+    rejectQuestion    
 };

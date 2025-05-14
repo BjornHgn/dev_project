@@ -33,6 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const token = localStorage.getItem('token');
     
     // Update UI based on login status
+
+// TO THIS:
     if (token && playerName) {
         // User is logged in
         const loginButton = document.querySelector('a[href="login.html"]');
@@ -42,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
             loginButton.innerHTML = `<i class="fas fa-user"></i> ${playerName}`;
             loginButton.href = "#";
         }
-        
+
         if (registerButton) {
             registerButton.innerHTML = `<i class="fas fa-sign-out-alt"></i> Logout`;
             registerButton.href = "#";
@@ -59,11 +61,36 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.location.reload();
             });
         }
-        
+
         // AUTO-FILL PLAYER NAME: Add this code to pre-fill the player name input
         const playerNameInput = document.getElementById("player-name");
         if (playerNameInput) {
             playerNameInput.value = playerName;
+        }
+
+        // Add Submit Question link to navigation
+        const navContainer = document.querySelector('header nav ul, .auth-links');
+        if (navContainer) {
+            // Check if the submit link already exists to prevent duplicates
+            if (!navContainer.querySelector('a[href="submit-question.html"]')) {
+                // Create either a list item or a direct link depending on container type
+                if (navContainer.classList.contains('auth-links')) {
+                    const submitLink = document.createElement('p');
+                    submitLink.innerHTML = '<a href="submit-question.html"><i class="fas fa-plus-circle"></i> Submit Question</a>';
+                    navContainer.insertBefore(submitLink, navContainer.lastElementChild);
+                } else {
+                    const submitQuestionLink = document.createElement('li');
+                    submitQuestionLink.innerHTML = '<a href="submit-question.html">Submit Question</a>';
+                    
+                    // Insert before the admin link if it exists, otherwise append to the end
+                    const adminLink = navContainer.querySelector('a[href="admin.html"]')?.parentNode;
+                    if (adminLink) {
+                        navContainer.insertBefore(submitQuestionLink, adminLink);
+                    } else {
+                        navContainer.appendChild(submitQuestionLink);
+                    }
+                }
+            }
         }
     }
     
