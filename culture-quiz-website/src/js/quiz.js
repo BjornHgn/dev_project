@@ -71,6 +71,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // Rest of your DOMContentLoaded code...
 });
 
+// Add event listener for restart button
+document.getElementById('restart-quiz').addEventListener('click', () => {
+    console.log('Restart button clicked');
+    restartQuiz();
+});
+
+// Function to restart the quiz
+function restartQuiz() {
+    // Reset quiz state
+    currentQuestionIndex = 0;
+    score = 0;
+    hintsUsed = 0;
+    
+    // Hide results section
+    resultsContainer.style.display = 'none';
+    
+    // Show quiz elements
+    quizContainer.style.display = 'flex';
+    document.querySelector('.timer-container').style.display = 'block';
+    document.querySelector('.button-group').style.display = 'flex';
+    
+    // Hide quiz controls
+    document.querySelector('.quiz-controls').style.display = 'none';
+    
+    // Optionally create a new session
+    const playerName = localStorage.getItem("playerName");
+    const sessionId = generateFallbackSessionId();
+    localStorage.setItem("sessionId", sessionId);
+    
+    console.log(`Restarting quiz for player: ${playerName} with new session: ${sessionId}`);
+    
+    // Emit join session event
+    socket.emit('joinSession', { sessionId: sessionId, userId: playerName });
+    
+    // Restart the quiz
+    startQuiz();
+}
+
 // Load questions from JSON file
 async function loadQuestions() {
     const response = await fetch('data/questions.json');

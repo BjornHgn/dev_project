@@ -6,7 +6,7 @@ const Session = require('../models/sessionModel');
 const { protect } = require('../middleware/authMiddleware');
 const adminController = require('../controllers/adminController');
 
-// Optional: Middleware to check if user is admin
+// Define isAdmin middleware BEFORE using it
 const isAdmin = async (req, res, next) => {
     if (req.user && req.user.role === 'admin') {
         next();
@@ -14,6 +14,10 @@ const isAdmin = async (req, res, next) => {
         res.status(403).json({ error: 'Access denied. Admin rights required.' });
     }
 };
+
+// Apply middlewares in the correct order
+router.use(protect);
+router.use(isAdmin);
 
 // Dashboard statistics
 router.get('/stats', adminController.getDashboardStats);

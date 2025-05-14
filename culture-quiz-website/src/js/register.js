@@ -32,8 +32,41 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Registration response:', data);
             
             if (response.ok) {
-                alert('Registration successful! Please log in.');
-                window.location.href = 'login.html';
+                // Auto-login - store auth data in localStorage
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('playerName', username);
+                localStorage.setItem('userId', data.userId);
+                localStorage.setItem('userRole', data.role);
+                
+                // Create session for the user
+                try {
+                    const sessionResponse = await fetch('http://localhost:5000/api/sessions/create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${data.token}`
+                        },
+                        body: JSON.stringify({ userId: username })
+                    });
+                    
+                    const sessionData = await sessionResponse.json();
+                    
+                    if (sessionResponse.ok) {
+                        // Store session ID
+                        localStorage.setItem('sessionId', sessionData.session.sessionId);
+                        
+                        // Navigate to homepage
+                        window.location.href = 'index.html';
+                    } else {
+                        console.error('Error creating session:', sessionData.error);
+                        // Still navigate to homepage even if session creation fails
+                        window.location.href = 'index.html';
+                    }
+                } catch (sessionError) {
+                    console.error('Error creating session:', sessionError);
+                    // Still navigate to homepage even if session creation fails
+                    window.location.href = 'index.html';
+                }
             } else {
                 alert(`Registration failed: ${data.error || 'Unknown error'}`);
             }

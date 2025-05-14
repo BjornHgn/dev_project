@@ -1,6 +1,3 @@
-// Main JavaScript file for the K-Culture Quiz Website
-
-// Improve the createGameSession function
 async function createGameSession(playerName) {
     try {
         const response = await fetch('http://localhost:5000/api/sessions/create', {
@@ -31,6 +28,45 @@ async function createGameSession(playerName) {
 // Replace all existing event listeners with this single one
 document.addEventListener("DOMContentLoaded", () => {
     console.log('DOM loaded - initializing form');
+    // Check if user is logged in
+    const playerName = localStorage.getItem('playerName');
+    const token = localStorage.getItem('token');
+    
+    // Update UI based on login status
+    if (token && playerName) {
+        // User is logged in
+        const loginButton = document.querySelector('a[href="login.html"]');
+        const registerButton = document.querySelector('a[href="register.html"]');
+        
+        if (loginButton) {
+            loginButton.innerHTML = `<i class="fas fa-user"></i> ${playerName}`;
+            loginButton.href = "#";
+        }
+        
+        if (registerButton) {
+            registerButton.innerHTML = `<i class="fas fa-sign-out-alt"></i> Logout`;
+            registerButton.href = "#";
+            registerButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Clear user data from localStorage
+                localStorage.removeItem('token');
+                localStorage.removeItem('playerName');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('sessionId');
+                
+                // Reload the page
+                window.location.reload();
+            });
+        }
+        
+        // AUTO-FILL PLAYER NAME: Add this code to pre-fill the player name input
+        const playerNameInput = document.getElementById("player-name");
+        if (playerNameInput) {
+            playerNameInput.value = playerName;
+        }
+    }
+    
     const playerForm = document.getElementById("player-form");
     const questionCountSlider = document.getElementById("question-count");
     const questionCountValue = document.getElementById("question-count-value");
@@ -40,6 +76,15 @@ document.addEventListener("DOMContentLoaded", () => {
         questionCountSlider.addEventListener("input", () => {
             questionCountValue.textContent = questionCountSlider.value;
         });
+    }
+
+    const userRole = localStorage.getItem('userRole');
+    const navContainer = document.querySelector('header nav ul') || document.querySelector('nav ul');
+    
+    if (userRole === 'admin' && navContainer) {
+        const adminLink = document.createElement('li');
+        adminLink.innerHTML = '<a href="admin.html">Admin Dashboard</a>';
+        navContainer.appendChild(adminLink);
     }
     
     if (!playerForm) {

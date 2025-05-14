@@ -29,16 +29,28 @@ const registerUser = async (req, res) => {
         await user.save();
         console.log('User registered successfully:', username);
         
+        // Create JWT token for auto-login
+        const token = jwt.sign({ 
+            id: user._id, 
+            role: user.role 
+        }, 'your_jwt_secret', { 
+            expiresIn: '1h' 
+        });
+        
+        // Return token along with user data for auto-login
         res.status(201).json({ 
             message: 'User registered successfully',
+            token,
             userId: user._id,
-            username: user.username
+            username: user.username,
+            role: user.role
         });
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({ error: 'Error registering user' });
     }
 };
+
 
 const loginUser = async (req, res) => {
     const { username, password } = req.body;
@@ -51,6 +63,8 @@ const loginUser = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
+        console.log('Found user with role:', user.role);
+        
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             console.log('Invalid password for user:', username);
@@ -72,7 +86,7 @@ const loginUser = async (req, res) => {
             token,
             username: user.username,
             userId: user._id,
-            role: user.role  // Include the user's role
+            role: user.role
         });
     } catch (error) {
         console.error('Login error:', error);

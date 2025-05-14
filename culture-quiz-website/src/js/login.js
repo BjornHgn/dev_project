@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('playerName', username);
                 localStorage.setItem('userId', data.userId);
-                localStorage.setItem('userRole', data.role); // Store the user role
+                localStorage.setItem('userRole', data.role);
                 
                 // Check if user is admin and redirect accordingly
                 if (data.role === 'admin') {
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
-                // For regular users, create a session and redirect to quiz
+                // For regular users, create a session but redirect to homepage instead of quiz
                 const sessionResponse = await fetch('http://localhost:5000/api/sessions/create', {
                     method: 'POST',
                     headers: {
@@ -60,7 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (sessionResponse.ok) {
                     localStorage.setItem('sessionId', sessionData.session.sessionId);
-                    window.location.href = 'quiz.html';
+                    // Redirect to homepage instead of quiz
+                    window.location.href = 'index.html';
                 } else {
                     alert(`Error creating session: ${sessionData.error || 'Unknown error'}`);
                 }
