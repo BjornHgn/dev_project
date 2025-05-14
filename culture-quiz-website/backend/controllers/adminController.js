@@ -190,6 +190,7 @@ const approveQuestion = async (req, res) => {
             options: pendingQuestion.options,
             answer: pendingQuestion.answer,
             category: pendingQuestion.category,
+            difficulty: pendingQuestion.difficulty, // Make sure to include this
             imageUrl: pendingQuestion.imageUrl
         });
         

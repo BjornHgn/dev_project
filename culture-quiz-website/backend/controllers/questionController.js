@@ -1,9 +1,8 @@
 const PendingQuestion = require('../models/pendingQuestionModel');
 
-// Submit a new question
 const submitQuestion = async (req, res) => {
     try {
-        const { question, options, answer, category, imageUrl } = req.body;
+        const { question, options, answer, category, difficulty, imageUrl } = req.body;
         
         // Validate required fields
         if (!question || !options || !answer) {
@@ -16,6 +15,7 @@ const submitQuestion = async (req, res) => {
             options,
             answer,
             category: category || 'general',
+            difficulty: difficulty || 'medium', // Add this line
             imageUrl,
             submittedBy: {
                 userId: req.user._id,

@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Get form values
             const questionText = document.getElementById('question-text').value.trim();
             const category = document.getElementById('question-category').value;
+            const difficulty = document.getElementById('question-difficulty').value; // Add this line
             const correctAnswer = document.getElementById('correct-answer').value;
             const imageUrl = document.getElementById('image-url').value.trim();
             
@@ -60,8 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showNotification('Please fill all required fields', 'error');
                 return;
             }
-            
-            // Send to server
+                
             const response = await fetch('http://localhost:5000/api/questions/submit', {
                 method: 'POST',
                 headers: {
@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     options,
                     answer: correctAnswer,
                     category,
+                    difficulty, // Add this line
                     imageUrl: imageUrl || undefined
                 })
             });

@@ -5,6 +5,7 @@ const pendingQuestionSchema = new mongoose.Schema({
     options: { type: [String], required: true },
     answer: { type: String, required: true },
     category: { type: String, default: 'general' },
+    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' }, // Add this line
     imageUrl: { type: String },
     submittedBy: { 
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
