@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             console.log('Attempting login for user:', username);
             
-            const response = await fetch('http://localhost:5000/api/auth/login', {
+            const response = await fetch('http://10.33.75.205:5000/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

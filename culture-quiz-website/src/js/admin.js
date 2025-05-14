@@ -63,7 +63,7 @@ function setupNavigation() {
 // Dashboard statistics
 async function loadDashboardStats() {
     try {
-        const response = await fetch('http://localhost:5000/api/admin/stats', {
+        const response = await fetch('http://10.33.75.205:5000/api/admin/stats', {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -166,7 +166,7 @@ function setupQuestionManagement() {
 // Load questions into table
 async function loadQuestions() {
     try {
-        const response = await fetch('http://localhost:5000/api/admin/questions', {
+        const response = await fetch('http://10.33.75.205:5000/api/admin/questions', {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -227,7 +227,7 @@ async function loadQuestions() {
 // Create a new question
 async function createQuestion(questionData) {
     try {
-        const response = await fetch('http://localhost:5000/api/admin/questions', {
+        const response = await fetch('http://10.33.75.205:5000/api/admin/questions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -251,7 +251,7 @@ async function createQuestion(questionData) {
 // Update an existing question
 async function updateQuestion(id, questionData) {
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/questions/${id}`, {
+        const response = await fetch(`http://10.33.75.205:5000/api/admin/questions/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -275,7 +275,7 @@ async function updateQuestion(id, questionData) {
 // Delete a question
 async function deleteQuestion(id) {
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/questions/${id}`, {
+        const response = await fetch(`http://10.33.75.205:5000/api/admin/questions/${id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -431,7 +431,7 @@ function setupUserManagement() {
 // Load users into table
 async function loadUsers() {
     try {
-        const response = await fetch('http://localhost:5000/api/admin/users', {
+        const response = await fetch('http://10.33.75.205:5000/api/admin/users', {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -495,7 +495,7 @@ async function loadUsers() {
 // Create a new user
 async function createUser(userData) {
     try {
-        const response = await fetch('http://localhost:5000/api/admin/users', {
+        const response = await fetch('http://10.33.75.205:5000/api/admin/users', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -519,7 +519,7 @@ async function createUser(userData) {
 // Update an existing user
 async function updateUser(id, userData) {
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+        const response = await fetch(`http://10.33.75.205:5000/api/admin/users/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -543,7 +543,7 @@ async function updateUser(id, userData) {
 // Delete a user
 async function deleteUser(id) {
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+        const response = await fetch(`http://10.33.75.205:5000/api/admin/users/${id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -590,7 +590,7 @@ function editUser(user) {
 // Session Management
 async function loadSessions() {
     try {
-        const response = await fetch('http://localhost:5000/api/admin/sessions', {
+        const response = await fetch('http://10.33.75.205:5000/api/admin/sessions', {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -648,7 +648,7 @@ async function loadSessions() {
 // Delete a session
 async function deleteSession(id) {
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/sessions/${id}`, {
+        const response = await fetch(`http://10.33.75.205:5000/api/admin/sessions/${id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -728,7 +728,7 @@ function showNotification(message, type) {
 // Add this function to load and manage pending questions
 async function loadPendingQuestions() {
     try {
-        const response = await fetch('http://localhost:5000/api/admin/pending-questions', {
+        const response = await fetch('http://10.33.75.205:5000/api/admin/pending-questions', {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -801,7 +801,7 @@ async function loadPendingQuestions() {
 // Approve a question
 async function approveQuestion(id) {
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/pending-questions/${id}/approve`, {
+        const response = await fetch(`http://10.33.75.205:5000/api/admin/pending-questions/${id}/approve`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -859,7 +859,7 @@ function openRejectModal(id) {
         const feedback = document.getElementById('reject-feedback').value.trim();
         
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/pending-questions/${id}/reject`, {
+            const response = await fetch(`http://10.33.75.205:5000/api/admin/pending-questions/${id}/reject`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

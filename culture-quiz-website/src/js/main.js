@@ -1,6 +1,6 @@
 async function createGameSession(playerName) {
     try {
-        const response = await fetch('http://localhost:5000/api/sessions/create', {
+        const response = await fetch('http://10.33.75.205:5000/api/sessions/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -28,7 +28,7 @@ async function createGameSession(playerName) {
 // Add this function to join an existing session
 async function joinGameSession(sessionId, playerName) {
     try {
-        const response = await fetch('http://localhost:5000/api/sessions/join', {
+        const response = await fetch('http://10.33.75.205:5000/api/sessions/join', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -198,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             try {
                 // Create session with proper error handling
-                const response = await fetch('http://localhost:5000/api/sessions/create', {
+                const response = await fetch('http://10.33.75.205:5000/api/sessions/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

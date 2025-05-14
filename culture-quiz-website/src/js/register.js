@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             console.log('Sending registration request for user:', username);
             
-            const response = await fetch('http://localhost:5000/api/auth/register', {
+            const response = await fetch('http://10.33.75.205:5000/api/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

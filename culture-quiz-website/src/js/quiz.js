@@ -152,7 +152,7 @@ async function loadQuestions() {
     
     try {
         console.log(`Fetching questions with difficulty=${difficulty}, category=${category}`);
-        const response = await fetch(`http://localhost:5000/api/game/questions?difficulty=${difficulty}&category=${category}`);
+        const response = await fetch(`http://10.33.75.205:5000/api/game/questions?difficulty=${difficulty}&category=${category}`);
         
         if (!response.ok) {
             throw new Error('Failed to fetch questions from server');

@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let allSubmissions = [];
     
     try {
-        const response = await fetch('http://localhost:5000/api/questions/my-submissions', {
+        const response = await fetch('http://10.33.75.205:5000/api/questions/my-submissions', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
