@@ -34,10 +34,23 @@ const endGame = async (req, res) => {
     }
 };
 
-// New function to get questions from the database
+// Get questions from the database with filtering
 const getQuestions = async (req, res) => {
     try {
-        const questions = await Question.find();
+        const { difficulty, category } = req.query;
+        let query = {};
+        
+        if (difficulty && difficulty !== 'all') {
+            query.difficulty = difficulty;
+        }
+        
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+        
+        console.log('Database query:', query);
+        const questions = await Question.find(query);
+        console.log(`Found ${questions.length} questions matching the criteria`);
         res.json({ questions });
     } catch (error) {
         console.error('Error fetching questions:', error);

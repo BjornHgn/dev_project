@@ -24,16 +24,22 @@ async function importQuestions() {
         
         // Parse JSON content
         const questionsData = JSON.parse(jsonContent);
-        
-        console.log(`Found ${questionsData.questions.length} questions in JSON file`);
-        
+
+        // Ensure each question has difficulty and category
+        const enhancedQuestions = questionsData.questions.map(q => ({
+            ...q,
+            difficulty: q.difficulty || 'medium',
+            category: q.category || 'general'
+        }));
+
+        console.log(`Found ${enhancedQuestions.length} questions in JSON file`);
+
         // Clear existing questions
         await Question.deleteMany({});
         console.log('Cleared existing questions');
-        
-        // Insert new questions
-        const result = await Question.insertMany(questionsData.questions);
-        console.log(`Successfully imported ${result.length} questions`);
+
+        // Insert enhanced questions
+        const result = await Question.insertMany(enhancedQuestions);
         
         // Verify insertion
         const count = await Question.countDocuments();

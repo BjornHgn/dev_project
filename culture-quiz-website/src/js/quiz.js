@@ -109,12 +109,30 @@ function restartQuiz() {
     startQuiz();
 }
 
-// Load questions from JSON file
+// Load questions from database via API
 async function loadQuestions() {
-    const response = await fetch('data/questions.json');
-    const data = await response.json();
-    console.log('Loaded questions from JSON:', data); // Debugging
-    return data.questions; // Ensure you return the "questions" array
+    const difficulty = localStorage.getItem("difficulty") || "medium";
+    const category = localStorage.getItem("category") || "all";
+    
+    try {
+        console.log(`Fetching questions with difficulty=${difficulty}, category=${category}`);
+        const response = await fetch(`http://localhost:5000/api/game/questions?difficulty=${difficulty}&category=${category}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch questions from server');
+        }
+        
+        const data = await response.json();
+        console.log('Loaded questions from API:', data);
+        return data.questions;
+    } catch (error) {
+        console.error('Error loading questions:', error);
+        // Fallback to local JSON if API fails
+        console.log('Falling back to local questions file');
+        const fallbackResponse = await fetch('data/questions.json');
+        const fallbackData = await fallbackResponse.json();
+        return fallbackData.questions;
+    }
 }
 
 // Modify the startQuiz function to use the question count
