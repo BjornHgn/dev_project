@@ -59,6 +59,21 @@ document.getElementById('get-hint').addEventListener('click', async () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Check for session ID in URL parameters (for direct joining)
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionParam = urlParams.get('session');
+    
+    if (sessionParam) {
+        // Store the session ID from URL parameter
+        localStorage.setItem("sessionId", sessionParam);
+        
+        // Remove the session parameter from URL (cleaner appearance)
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        
+        showToast('Joined shared session!');
+    }
+    
     const playerName = localStorage.getItem("playerName");
     // Get the session ID from localStorage - this is set when creating a session in main.js
     const sessionId = localStorage.getItem("sessionId") || generateFallbackSessionId();
@@ -68,7 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Use the actual session ID from localStorage
     socket.emit('joinSession', { sessionId: sessionId, userId: playerName });
     
-    // Rest of your DOMContentLoaded code...
+    // Start the quiz
+    startQuiz();
 });
 
 // Add event listener for restart button
@@ -76,6 +92,26 @@ document.getElementById('restart-quiz').addEventListener('click', () => {
     console.log('Restart button clicked');
     restartQuiz();
 });
+
+// Add this after you initialize the quiz
+function displaySessionInfo() {
+    const sessionId = localStorage.getItem("sessionId");
+    if (sessionId) {
+        // Create a session info div if it doesn't exist
+        let sessionInfo = document.getElementById('session-info');
+        if (!sessionInfo) {
+            sessionInfo = document.createElement('div');
+            sessionInfo.id = 'session-info';
+            sessionInfo.className = 'session-info';
+            document.querySelector('.quiz-container').prepend(sessionInfo);
+        }
+        
+        sessionInfo.innerHTML = `
+            <p>Session Code: <strong>${sessionId}</strong></p>
+            <p>Share this code with friends to play together!</p>
+        `;
+    }
+}
 
 // Function to restart the quiz
 function restartQuiz() {
@@ -148,7 +184,7 @@ async function startQuiz() {
     // Limit questions to the selected count
     window.quizQuestions = shuffledQuestions.slice(0, questionCount);
     console.log(`Starting quiz with ${window.quizQuestions.length} questions`);
-    
+    displaySessionInfo();
     displayQuestion(window.quizQuestions[currentQuestionIndex]);
     startTimer();
 }
@@ -216,7 +252,73 @@ function displayQuestion(question) {
     // Update hint button
     getHintButton.innerHTML = `<i class="fas fa-lightbulb"></i> Obtenir un indice`;
     getHintButton.disabled = false;
+    
+        // Emit event to synchronize with other players
+        const sessionId = localStorage.getItem("sessionId");
+        socket.emit('startQuizQuestion', {
+            sessionId,
+            questionIndex: currentQuestionIndex,
+            question // Send the question data too
+        });
+    }
+
+// Add handler for when other players move to a question
+socket.on('quizQuestionStarted', (data) => {
+    // Only update if we're not the one who sent this event
+    if (data.questionIndex !== currentQuestionIndex) {
+        currentQuestionIndex = data.questionIndex;
+        displayQuestion(data.question);
+        startTimer(); // Restart the timer
+    }
+});
+
+// Listen for player joined events
+socket.on('playerJoined', (data) => {
+    // Update player count in the UI
+    updatePlayerCount();
+    
+    // Show notification about new player
+    const notification = document.createElement('div');
+    notification.className = `player-notification join`;
+    notification.innerHTML = `<i class="fas fa-user-plus"></i> ${data.userId} joined the game`;
+    document.querySelector('.quiz-container').appendChild(notification);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => notification.remove(), 3000);
+});
+
+// Function to update player count
+function updatePlayerCount() {
+    const playerCountElement = document.getElementById('player-count');
+    if (playerCountElement) {
+        const sessionId = localStorage.getItem("sessionId");
+        // Request current player count from server
+        socket.emit('getSessionInfo', { sessionId });
+    }
 }
+
+// Listen for session info updates
+socket.on('sessionInfo', (data) => {
+    const playerCountElement = document.getElementById('player-count');
+    if (playerCountElement && data.playerCount) {
+        playerCountElement.textContent = data.playerCount;
+    }
+});
+
+// Add handler for when other players answer
+socket.on('playerAnswered', (data) => {
+    // You can use this to show who answered what
+    const { userId, questionIndex, selectedOption, isCorrect } = data;
+    
+    // Show a notification about the other player's answer
+    const notification = document.createElement('div');
+    notification.className = `player-answer ${isCorrect ? 'correct' : 'incorrect'}`;
+    notification.textContent = `${userId} answered ${isCorrect ? 'correctly' : 'incorrectly'}`;
+    document.querySelector('.quiz-container').appendChild(notification);
+    
+    // Remove the notification after 3 seconds
+    setTimeout(() => notification.remove(), 3000);
+});
 
 // Handle answer submission
 submitButton.addEventListener('click', () => {
@@ -412,3 +514,4 @@ function shuffleArray(array) {
 document.addEventListener('DOMContentLoaded', () => {
 startQuiz();
 });
+

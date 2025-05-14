@@ -25,6 +25,35 @@ async function createGameSession(playerName) {
     }
 }
 
+// Add this function to join an existing session
+async function joinGameSession(sessionId, playerName) {
+    try {
+        const response = await fetch('http://localhost:5000/api/sessions/join', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ sessionId, userId: playerName })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Store the session ID in localStorage
+            localStorage.setItem('sessionId', sessionId);
+            console.log('Joined session:', sessionId);
+            return true;
+        } else {
+            console.error('Failed to join session:', data.error);
+            return false;
+        }
+    } catch (error) {
+        console.error('Error joining session:', error);
+        return false;
+    }
+}
+
+
 // Replace all existing event listeners with this single one
 document.addEventListener("DOMContentLoaded", () => {
     console.log('DOM loaded - initializing form');
@@ -34,7 +63,6 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Update UI based on login status
 
-// TO THIS:
     if (token && playerName) {
         // User is logged in
         const loginButton = document.querySelector('a[href="login.html"]');
@@ -91,6 +119,29 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
             }
+        }
+        const joinGameBtn = document.getElementById('join-game-btn');
+        if (joinGameBtn) {
+            joinGameBtn.addEventListener('click', async () => {
+                const playerName = localStorage.getItem('playerName');
+                if (!playerName) {
+                    alert('Please enter your name first');
+                    return;
+                }
+                
+                const sessionCode = document.getElementById('session-code').value;
+                if (!sessionCode) {
+                    alert('Please enter a session code');
+                    return;
+                }
+                
+                const joined = await joinGameSession(sessionCode, playerName);
+                if (joined) {
+                    window.location.href = 'quiz.html';
+                } else {
+                    alert('Failed to join game. Check your session code and try again.');
+                }
+            });
         }
     }
     

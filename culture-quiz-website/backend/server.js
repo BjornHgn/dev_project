@@ -68,12 +68,28 @@ connectDB().then(async () => {
     // Socket.io connection handling
     io.on('connection', (socket) => {
         console.log('A user connected:', socket.id);
-    
+
         socket.on('joinSession', (data) => {
             const { sessionId, userId } = data;
             console.log(`User ${userId} joined session ${sessionId}`);
             socket.join(sessionId);
-            socket.to(sessionId).emit('playerJoined', { userId });
+            // Notify all users in the session about the new player
+            io.to(sessionId).emit('playerJoined', { userId, playerId: socket.id });
+        });
+        
+        // Add this new event for quiz state synchronization
+        socket.on('startQuizQuestion', (data) => {
+            const { sessionId, questionIndex, question } = data;
+            // Broadcast to all other clients in the session
+            socket.to(sessionId).emit('quizQuestionStarted', { questionIndex, question });
+        });
+        
+        // Add this to synchronize answers
+        socket.on('answerSelected', (data) => {
+            const { sessionId, userId, questionIndex, selectedOption, isCorrect } = data;
+            socket.to(sessionId).emit('playerAnswered', { 
+                userId, questionIndex, selectedOption, isCorrect 
+            });
         });
     
         socket.on('updateScore', (data) => {
@@ -92,8 +108,9 @@ connectDB().then(async () => {
     
     // Start server
     const PORT = process.env.PORT || 5000;
-    server.listen(PORT, () => {
-        console.log(`Server running on http://localhost:${PORT}`);
+    server.listen(PORT, '0.0.0.0', () => {
+        console.log(`Server running on http://0.0.0.0:${PORT}`);
+        console.log(`Access from other devices at http://YOUR_IP_ADDRESS:${PORT}`);
     });
 }).catch(error => {
     console.error('Failed to connect to database:', error);
