@@ -13,6 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const Question = require('./models/questionModel');
 const questionRoutes = require('./routes/questions');
+const Session = require('./models/sessionModel');
 
 // Initialize Express app
 const app = express();
@@ -69,12 +70,55 @@ connectDB().then(async () => {
     io.on('connection', (socket) => {
         console.log('A user connected:', socket.id);
 
-        socket.on('joinSession', (data) => {
+        socket.on('joinSession', async (data) => {
             const { sessionId, userId } = data;
             console.log(`User ${userId} joined session ${sessionId}`);
-            socket.join(sessionId);
-            // Notify all users in the session about the new player
-            io.to(sessionId).emit('playerJoined', { userId, playerId: socket.id });
+            
+            try {
+                // Join the socket room
+                socket.join(sessionId);
+                
+                // Find or create session
+                let session = await Session.findOne({ sessionId });
+                
+                if (!session) {
+                    // Create a new session if it doesn't exist
+                    session = new Session({
+                        sessionId,
+                        players: [userId],
+                        scores: [{ playerName: userId, score: 0 }],
+                        isActive: true,
+                        createdAt: new Date()
+                    });
+                    await session.save();
+                } else {
+                    // Add player if not already in session
+                    if (!session.players.includes(userId)) {
+                        session.players.push(userId);
+                        
+                        // Initialize player score
+                        if (!session.scores.some(s => s.playerName === userId)) {
+                            session.scores.push({ playerName: userId, score: 0 });
+                        }
+                        await session.save();
+                    }
+                }
+                
+                // Broadcast full session data to all clients
+                io.to(sessionId).emit('sessionUpdate', {
+                    players: session.players,
+                    scores: session.scores
+                });
+                
+                // Notify others about the new player
+                socket.to(sessionId).emit('playerJoined', { 
+                    userId, 
+                    playerId: socket.id,
+                    playerCount: session.players.length
+                });
+            } catch (error) {
+                console.error('Error in joinSession:', error);
+            }
         });
         
         // Add this new event for quiz state synchronization
@@ -92,9 +136,35 @@ connectDB().then(async () => {
             });
         });
     
-        socket.on('updateScore', (data) => {
+        socket.on('updateScore', async (data) => {
             const { sessionId, playerName, playerScore } = data;
-            io.to(sessionId).emit('scoreUpdated', { playerName, playerScore });
+            
+            try {
+                // Update score in database
+                const session = await Session.findOne({ sessionId });
+                if (session) {
+                    // Find the player's score entry
+                    const playerIndex = session.scores.findIndex(s => s.playerName === playerName);
+                    
+                    if (playerIndex >= 0) {
+                        // Update existing score
+                        session.scores[playerIndex].score = playerScore;
+                    } else {
+                        // Add new score entry
+                        session.scores.push({ playerName, score: playerScore });
+                    }
+                    
+                    await session.save();
+                    
+                    // Broadcast updated scores to everyone in the session
+                    io.to(sessionId).emit('sessionUpdate', {
+                        players: session.players,
+                        scores: session.scores
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating score:', error);
+            }
         });
     
         socket.on('endGame', (data) => {
@@ -103,6 +173,21 @@ connectDB().then(async () => {
     
         socket.on('disconnect', () => {
             console.log('A user disconnected:', socket.id);
+        });
+
+        socket.on('getSessionInfo', async (data) => {
+            try {
+                const session = await Session.findOne({ sessionId: data.sessionId });
+                if (session) {
+                    socket.emit('sessionUpdate', {
+                        players: session.players,
+                        scores: session.scores,
+                        playerCount: session.players.length
+                    });
+                }
+            } catch (error) {
+                console.error('Error getting session info:', error);
+            }
         });
     });
     

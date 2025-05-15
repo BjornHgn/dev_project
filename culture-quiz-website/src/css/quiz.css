@@ -234,6 +234,7 @@ header h1 {
     border-radius: 3px;
 }
 
+/* Enhanced scoreboard styling */
 #scoreboard-list li {
     padding: 10px;
     border-bottom: 1px solid var(--border-color);
@@ -241,6 +242,27 @@ header h1 {
     display: flex;
     justify-content: space-between;
     transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+#scoreboard-list li.current-player {
+    background-color: rgba(52, 152, 219, 0.1);
+    border-left: 3px solid var(--primary-color);
+    padding-left: 7px;
+}
+
+#scoreboard-list .rank {
+    width: 25px;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+#scoreboard-list .player-name {
+    flex: 1;
+    text-align: left;
+    margin: 0 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 #scoreboard-list li:hover {

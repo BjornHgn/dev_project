@@ -28,6 +28,15 @@ const maxHints = 3; // Maximum number of hints a player can use
 const timeLimit = 15; // seconds for each question
 const socket = io('http://localhost:5000'); // Connect to the backend server
 
+
+// Add this after your other socket event listeners
+socket.on('sessionUpdate', (data) => {
+    console.log('Received session update:', data);
+    if (data.scores && Array.isArray(data.scores)) {
+        updateFullScoreboard(data.scores);
+    }
+});
+
 // Listen for game start
 socket.on('gameStarted', (data) => {
     console.log('Game started:', data);
@@ -92,6 +101,51 @@ document.getElementById('restart-quiz').addEventListener('click', () => {
     console.log('Restart button clicked');
     restartQuiz();
 });
+
+// Add this new function to handle full scoreboard updates
+function updateFullScoreboard(scores) {
+    const scoreboardList = document.getElementById('scoreboard-list');
+    if (!scoreboardList) return;
+    
+    // Clear the current scoreboard
+    scoreboardList.innerHTML = '';
+    
+    // Sort scores by value (highest first)
+    const sortedScores = [...scores].sort((a, b) => b.score - a.score);
+    const currentPlayer = localStorage.getItem("playerName");
+    
+    // Add each player to the scoreboard
+    sortedScores.forEach((scoreData, index) => {
+        const playerEntry = document.createElement('li');
+        playerEntry.id = `player-${scoreData.playerName}`;
+        
+        // Highlight current player
+        if (scoreData.playerName === currentPlayer) {
+            playerEntry.classList.add('current-player');
+        }
+        
+        // Calculate rank (handle ties)
+        let rank = index + 1;
+        if (index > 0 && sortedScores[index-1].score === scoreData.score) {
+            // Keep same rank as previous player for ties
+            const prevEntry = scoreboardList.lastChild;
+            if (prevEntry) {
+                const prevRankElement = prevEntry.querySelector('.rank');
+                if (prevRankElement) {
+                    rank = parseInt(prevRankElement.textContent);
+                }
+            }
+        }
+        
+        playerEntry.innerHTML = `
+            <span class="rank">${rank}</span>
+            <span class="player-name">${scoreData.playerName}${scoreData.playerName === currentPlayer ? ' (You)' : ''}</span>
+            <span class="score">${scoreData.score}</span>
+        `;
+        
+        scoreboardList.appendChild(playerEntry);
+    });
+}
 
 // Add this after you initialize the quiz
 function displaySessionInfo() {
@@ -187,6 +241,10 @@ async function startQuiz() {
     displaySessionInfo();
     displayQuestion(window.quizQuestions[currentQuestionIndex]);
     startTimer();
+    const sessionId = localStorage.getItem('sessionId');
+    if (sessionId) {
+    socket.emit('getSessionInfo', { sessionId });
+    }
 }
 
 function generateFallbackSessionId() {
