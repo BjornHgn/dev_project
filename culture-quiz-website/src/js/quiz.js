@@ -22,14 +22,37 @@ const closeModal = document.querySelector('.close');
 let currentQuestionIndex = 0;
 let score = 0;
 let timer;
-// Add these variable declarations at the top with your other variables
 let hintsUsed = 0;
-const maxHints = 3; // Maximum number of hints a player can use
-const timeLimit = 15; // seconds for each question
-const socket = io('http://localhost:5000'); // Connect to the backend server
+const maxHints = 3;
+const timeLimit = 15;
+const socket = io('http://localhost:5000'); // Change to your server address
 
+// Add debug for socket connection
+socket.on('connect', () => {
+    console.log('Socket connected with ID:', socket.id);
+});
 
-// Add this after your other socket event listeners
+// Listen for session questions
+socket.on('sessionQuestions', (data) => {
+    console.log('Received session questions:', data);
+    if (data.questions && data.questions.length > 0) {
+        window.quizQuestions = data.questions;
+        
+        // Update total questions count
+        if (totalQuestionsSpan) {
+            totalQuestionsSpan.textContent = data.questions.length;
+        }
+        
+        // Start from the given question index or from beginning
+        currentQuestionIndex = data.currentQuestionIndex || 0;
+        
+        // Display the current question
+        displayQuestion(window.quizQuestions[currentQuestionIndex]);
+        startTimer();
+    }
+});
+
+// Listen for session updates
 socket.on('sessionUpdate', (data) => {
     console.log('Received session update:', data);
     if (data.scores && Array.isArray(data.scores)) {
@@ -37,37 +60,62 @@ socket.on('sessionUpdate', (data) => {
     }
 });
 
-// Listen for game start
-socket.on('gameStarted', (data) => {
-    console.log('Game started:', data);
-    // Start the quiz
-});
-
-socket.on('scoreUpdated', (data) => {
-    const { playerName, playerScore } = data;
-    updateScoreboard(playerName, playerScore); // Update the scoreboard dynamically
-});
-
-// Notify the server when the game ends
-function endGame() {
-    const sessionId = localStorage.getItem("sessionId") || "fallback-session";
-    console.log(`Ending game for session: ${sessionId}`);
-    socket.emit('endGame', { sessionId: sessionId });
+// Add this function to initialize the scoreboard
+function initializeScoreboard() {
+    const scoreboardList = document.getElementById('scoreboard-list');
+    if (scoreboardList) {
+        // Add the current player to the scoreboard initially
+        const playerName = localStorage.getItem("playerName") || "Guest";
+        scoreboardList.innerHTML = `
+            <li class="current-player">
+                <span class="rank">1</span>
+                <span class="player-name">${playerName} (You)</span>
+                <span class="score">0</span>
+            </li>
+        `;
+    }
 }
 
-document.getElementById('get-hint').addEventListener('click', async () => {
-    const question = document.getElementById('question').textContent;
-    const response = await fetch('http://localhost:5000/api/ai/generate-hint', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
-    });
+// Add fallback function to fetch questions directly
+async function fetchQuestionsDirectly() {
+    const difficulty = localStorage.getItem("difficulty") || "medium";
+    const category = localStorage.getItem("category") || "all";
+    const questionCount = parseInt(localStorage.getItem("questionCount") || "10");
+    
+    console.log(`Directly fetching ${questionCount} questions (${difficulty} difficulty, ${category} category)`);
+    
+    try {
+        const response = await fetch(`http://localhost:5000/api/game/questions?difficulty=${difficulty}&category=${category}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch questions: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('API returned data:', data);
+        
+        if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+            // Shuffle and limit to requested count
+            const shuffled = shuffleArray([...data.questions]);
+            return shuffled.slice(0, questionCount);
+        } else {
+            throw new Error('No questions returned from the API');
+        }
+    } catch (error) {
+        console.error('Error fetching questions:', error);
+        // Fallback to local JSON if API fails
+        try {
+            const fallbackResponse = await fetch('data/questions.json');
+            const fallbackData = await fallbackResponse.json();
+            const shuffled = shuffleArray([...fallbackData.questions]);
+            return shuffled.slice(0, questionCount);
+        } catch (fallbackError) {
+            console.error('Fallback error:', fallbackError);
+            return null;
+        }
+    }
+}
 
-    const data = await response.json();
-    document.getElementById('hint-container').textContent = data.hint;
-});
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Check for session ID in URL parameters (for direct joining)
     const urlParams = new URLSearchParams(window.location.search);
     const sessionParam = urlParams.get('session');
@@ -83,17 +131,57 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Joined shared session!');
     }
     
-    const playerName = localStorage.getItem("playerName");
-    // Get the session ID from localStorage - this is set when creating a session in main.js
+    const playerName = localStorage.getItem("playerName") || "Guest";
+    if (playerNameSpan) {
+        playerNameSpan.textContent = playerName;
+    }
+    
+    // Get quiz preferences from localStorage
+    const difficulty = localStorage.getItem("difficulty") || "medium";
+    const category = localStorage.getItem("category") || "all";
+    const questionCount = parseInt(localStorage.getItem("questionCount") || "10");
+    
+    // Get the session ID from localStorage
     const sessionId = localStorage.getItem("sessionId") || generateFallbackSessionId();
     
     console.log(`Starting quiz for player: ${playerName} with session: ${sessionId}`);
     
-    // Use the actual session ID from localStorage
-    socket.emit('joinSession', { sessionId: sessionId, userId: playerName });
+    // Join the session and include preferences
+    socket.emit('joinSession', { 
+        sessionId, 
+        userId: playerName,
+        difficulty,
+        category,
+        questionCount
+    });
     
-    // Start the quiz
-    startQuiz();
+    // Initialize UI elements
+    initializeScoreboard();
+    displaySessionInfo();
+    
+    // Set a timer to fetch questions directly if they don't arrive via socket
+    const questionsTimeout = setTimeout(async () => {
+        if (!window.quizQuestions) {
+            console.log('No questions received via socket after timeout, fetching directly...');
+            const questions = await fetchQuestionsDirectly();
+            if (questions && questions.length > 0) {
+                console.log(`Successfully fetched ${questions.length} questions directly`);
+                window.quizQuestions = questions;
+                currentQuestionIndex = 0;
+                displayQuestion(window.quizQuestions[currentQuestionIndex]);
+                startTimer();
+            } else {
+                showModal('Erreur', 'Impossible de charger les questions. Veuillez réessayer plus tard.');
+            }
+        } else {
+            console.log('Questions already loaded via socket');
+        }
+    }, 3000); // Wait 3 seconds before trying direct fetch
+    
+    // Clear the timeout if questions are received via socket
+    socket.on('sessionQuestions', () => {
+        clearTimeout(questionsTimeout);
+    });
 });
 
 // Add event listener for restart button
@@ -102,52 +190,63 @@ document.getElementById('restart-quiz').addEventListener('click', () => {
     restartQuiz();
 });
 
-// Add this new function to handle full scoreboard updates
+// Function to handle full scoreboard updates
 function updateFullScoreboard(scores) {
+    console.log('Updating full scoreboard with scores:', scores);
     const scoreboardList = document.getElementById('scoreboard-list');
-    if (!scoreboardList) return;
+    if (!scoreboardList) {
+        console.error('Scoreboard list element not found');
+        return;
+    }
+    
+    // Validate scores array
+    if (!Array.isArray(scores) || scores.length === 0) {
+        console.warn('No valid scores to display');
+        return;
+    }
     
     // Clear the current scoreboard
     scoreboardList.innerHTML = '';
     
-    // Sort scores by value (highest first)
+    // Sort scores by score value (highest first)
     const sortedScores = [...scores].sort((a, b) => b.score - a.score);
-    const currentPlayer = localStorage.getItem("playerName");
+    const currentPlayer = localStorage.getItem("playerName") || "Guest";
     
     // Add each player to the scoreboard
     sortedScores.forEach((scoreData, index) => {
+        if (!scoreData.playerName) {
+            console.warn('Skipping score entry without playerName', scoreData);
+            return;
+        }
+        
         const playerEntry = document.createElement('li');
         playerEntry.id = `player-${scoreData.playerName}`;
         
-        // Highlight current player
-        if (scoreData.playerName === currentPlayer) {
+        // Highlight the current player
+        const isCurrentPlayer = scoreData.playerName === currentPlayer;
+        if (isCurrentPlayer) {
             playerEntry.classList.add('current-player');
         }
         
-        // Calculate rank (handle ties)
+        // Add rank number and handle ties
         let rank = index + 1;
         if (index > 0 && sortedScores[index-1].score === scoreData.score) {
-            // Keep same rank as previous player for ties
-            const prevEntry = scoreboardList.lastChild;
-            if (prevEntry) {
-                const prevRankElement = prevEntry.querySelector('.rank');
-                if (prevRankElement) {
-                    rank = parseInt(prevRankElement.textContent);
-                }
+            const previousRankElement = scoreboardList.lastChild.querySelector('.rank');
+            if (previousRankElement) {
+                rank = parseInt(previousRankElement.textContent);
             }
         }
         
         playerEntry.innerHTML = `
             <span class="rank">${rank}</span>
-            <span class="player-name">${scoreData.playerName}${scoreData.playerName === currentPlayer ? ' (You)' : ''}</span>
+            <span class="player-name">${scoreData.playerName}${isCurrentPlayer ? ' (You)' : ''}</span>
             <span class="score">${scoreData.score}</span>
         `;
-        
         scoreboardList.appendChild(playerEntry);
     });
 }
 
-// Add this after you initialize the quiz
+// Add function to display session information
 function displaySessionInfo() {
     const sessionId = localStorage.getItem("sessionId");
     if (sessionId) {
@@ -185,70 +284,34 @@ function restartQuiz() {
     // Hide quiz controls
     document.querySelector('.quiz-controls').style.display = 'none';
     
-    // Optionally create a new session
-    const playerName = localStorage.getItem("playerName");
+    // Create a new session
+    const playerName = localStorage.getItem("playerName") || "Guest";
     const sessionId = generateFallbackSessionId();
     localStorage.setItem("sessionId", sessionId);
     
-    console.log(`Restarting quiz for player: ${playerName} with new session: ${sessionId}`);
-    
-    // Emit join session event
-    socket.emit('joinSession', { sessionId: sessionId, userId: playerName });
-    
-    // Restart the quiz
-    startQuiz();
-}
-
-// Load questions from database via API
-async function loadQuestions() {
+    // Get quiz preferences
     const difficulty = localStorage.getItem("difficulty") || "medium";
     const category = localStorage.getItem("category") || "all";
-    
-    try {
-        console.log(`Fetching questions with difficulty=${difficulty}, category=${category}`);
-        const response = await fetch(`http://10.33.75.205:5000/api/game/questions?difficulty=${difficulty}&category=${category}`);
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch questions from server');
-        }
-        
-        const data = await response.json();
-        console.log('Loaded questions from API:', data);
-        return data.questions;
-    } catch (error) {
-        console.error('Error loading questions:', error);
-        // Fallback to local JSON if API fails
-        console.log('Falling back to local questions file');
-        const fallbackResponse = await fetch('data/questions.json');
-        const fallbackData = await fallbackResponse.json();
-        return fallbackData.questions;
-    }
-}
-
-// Modify the startQuiz function to use the question count
-async function startQuiz() {
-    const playerName = localStorage.getItem("playerName");
     const questionCount = parseInt(localStorage.getItem("questionCount") || "10");
     
-    updateScoreboard(playerName, 0);
+    console.log(`Restarting quiz for player: ${playerName} with new session: ${sessionId}`);
     
-    const questions = await loadQuestions();
-    const shuffledQuestions = shuffleArray(questions);
+    // Join session with preferences
+    socket.emit('joinSession', { 
+        sessionId, 
+        userId: playerName,
+        difficulty,
+        category,
+        questionCount
+    });
     
-    // Limit questions to the selected count
-    window.quizQuestions = shuffledQuestions.slice(0, questionCount);
-    console.log(`Starting quiz with ${window.quizQuestions.length} questions`);
+    // Initialize UI
+    initializeScoreboard();
     displaySessionInfo();
-    displayQuestion(window.quizQuestions[currentQuestionIndex]);
-    startTimer();
-    const sessionId = localStorage.getItem('sessionId');
-    if (sessionId) {
-    socket.emit('getSessionInfo', { sessionId });
-    }
 }
 
+// Generate session ID if one doesn't exist
 function generateFallbackSessionId() {
-    // Create a fallback random hex ID if one wasn't stored
     const characters = '0123456789abcdef';
     let result = '';
     for (let i = 0; i < 16; i++) {
@@ -258,12 +321,17 @@ function generateFallbackSessionId() {
     return result;
 }
 
-// Update the displayQuestion function
+// Handle question display
 function displayQuestion(question) {
     console.log('Displaying question:', question);
     
+    if (!question) {
+        console.error('No question to display');
+        return;
+    }
+    
     // Update progress bar
-    const totalQuestions = window.quizQuestions.length;
+    const totalQuestions = window.quizQuestions ? window.quizQuestions.length : 10;
     const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
     progressFill.style.width = `${progress}%`;
     
@@ -298,27 +366,61 @@ function displayQuestion(question) {
     hintContainer.style.display = 'none';
     hintContainer.classList.remove('visible');
     
-    // Fix undefined variables by defining them if not already defined
-    if (typeof hintsUsed === 'undefined') {
-        window.hintsUsed = 0;
-    }
-    
-    if (typeof maxHints === 'undefined') {
-        window.maxHints = 3; // Default to 3 hints total
-    }
-    
     // Update hint button
     getHintButton.innerHTML = `<i class="fas fa-lightbulb"></i> Obtenir un indice`;
-    getHintButton.disabled = false;
+    getHintButton.disabled = hintsUsed >= maxHints;
     
-        // Emit event to synchronize with other players
-        const sessionId = localStorage.getItem("sessionId");
+    // Emit event to synchronize with other players
+    const sessionId = localStorage.getItem("sessionId");
+    if (sessionId) {
         socket.emit('startQuizQuestion', {
             sessionId,
             questionIndex: currentQuestionIndex,
-            question // Send the question data too
+            question
         });
     }
+}
+
+// Handle get hint button
+document.getElementById('get-hint').addEventListener('click', async () => {
+    if (hintsUsed >= maxHints) {
+        showModal('Limite d\'indices atteinte', 'Vous avez utilisé tous vos indices disponibles.');
+        return;
+    }
+    
+    if (!window.quizQuestions || !window.quizQuestions[currentQuestionIndex]) {
+        showModal('Erreur', 'Impossible de générer un indice pour cette question.');
+        return;
+    }
+    
+    hintsUsed++;
+    getHintButton.innerHTML = `<i class="fas fa-lightbulb"></i> Indices utilisés: ${hintsUsed}/${maxHints}`;
+    
+    if (hintsUsed >= maxHints) {
+        getHintButton.disabled = true;
+    }
+    
+    const question = window.quizQuestions[currentQuestionIndex].question;
+    
+    // Show loading state
+    hintContainer.classList.add('visible');
+    hintContainer.style.display = 'flex';
+    hintContent.textContent = 'Génération de l\'indice...';
+    
+    try {
+        const response = await fetch('http://localhost:5000/api/ai/generate-hint', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question }),
+        });
+
+        const data = await response.json();
+        hintContent.textContent = data.hint || 'Indice non disponible pour cette question.';
+    } catch (error) {
+        console.error('Error getting hint:', error);
+        hintContent.textContent = 'Impossible de générer un indice. Essayez à nouveau.';
+    }
+});
 
 // Add handler for when other players move to a question
 socket.on('quizQuestionStarted', (data) => {
@@ -355,23 +457,14 @@ function updatePlayerCount() {
     }
 }
 
-// Listen for session info updates
-socket.on('sessionInfo', (data) => {
-    const playerCountElement = document.getElementById('player-count');
-    if (playerCountElement && data.playerCount) {
-        playerCountElement.textContent = data.playerCount;
-    }
-});
-
 // Add handler for when other players answer
 socket.on('playerAnswered', (data) => {
-    // You can use this to show who answered what
-    const { userId, questionIndex, selectedOption, isCorrect } = data;
-    
     // Show a notification about the other player's answer
+    const { userId, isCorrect } = data;
+    
     const notification = document.createElement('div');
     notification.className = `player-answer ${isCorrect ? 'correct' : 'incorrect'}`;
-    notification.textContent = `${userId} answered ${isCorrect ? 'correctly' : 'incorrectly'}`;
+    notification.innerHTML = `<i class="fas fa-${isCorrect ? 'check' : 'times'}-circle"></i> ${userId} answered ${isCorrect ? 'correctly' : 'incorrectly'}`;
     document.querySelector('.quiz-container').appendChild(notification);
     
     // Remove the notification after 3 seconds
@@ -383,53 +476,78 @@ submitButton.addEventListener('click', () => {
     const selectedOption = document.querySelector('input[name="answer"]:checked');
     if (selectedOption) {
         const answer = selectedOption.value;
-        checkAnswer(answer); // Check the selected answer
+        checkAnswer(answer);
         currentQuestionIndex++;
         if (currentQuestionIndex < window.quizQuestions.length) {
-            displayQuestion(window.quizQuestions[currentQuestionIndex]); // Display the next question
-            startTimer(); // Restart the timer for the next question
+            displayQuestion(window.quizQuestions[currentQuestionIndex]);
+            startTimer();
         } else {
-            clearInterval(timer); // Stop the timer when the quiz ends
-            showResults(); // Show results
+            clearInterval(timer);
+            showResults();
         }
     } else {
-        alert('Please select an answer!');
+        showModal('Selection requise', 'Veuillez sélectionner une réponse avant de continuer.');
     }
 });
 
 // Check the selected answer
 function checkAnswer(answer) {
     const currentQuestion = window.quizQuestions[currentQuestionIndex];
-    const playerName = localStorage.getItem("playerName");
+    const playerName = localStorage.getItem("playerName") || "Guest";
     const sessionId = localStorage.getItem("sessionId") || "fallback-session";
 
     if (answer === currentQuestion.answer) {
         score++;
+        
+        // Create a notification for correct answer
+        const feedback = document.createElement('div');
+        feedback.className = 'answer-feedback correct';
+        feedback.innerHTML = `<i class="fas fa-check-circle"></i> Bonne réponse !`;
+        document.querySelector('.quiz-container').appendChild(feedback);
+        
+        // Remove the notification after 2 seconds
+        setTimeout(() => feedback.remove(), 2000);
+        
+        // Update score locally
         updateScoreboard(playerName, score);
         
-        // Use the correct session ID from localStorage
+        // Update score on server
         socket.emit('updateScore', { 
-            sessionId: sessionId, 
+            sessionId, 
             playerName, 
             playerScore: score 
         });
         
-        // Also update the database
-        fetch('http://localhost:5000/api/game/update-score', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                sessionId,
-                playerName,
-                score
-            })
-        }).catch(err => console.error('Error updating score:', err));
+        // Also notify other players
+        socket.emit('answerSelected', {
+            sessionId,
+            userId: playerName,
+            questionIndex: currentQuestionIndex,
+            selectedOption: answer,
+            isCorrect: true
+        });
+    } else {
+        // Create a notification for incorrect answer
+        const feedback = document.createElement('div');
+        feedback.className = 'answer-feedback incorrect';
+        feedback.innerHTML = `<i class="fas fa-times-circle"></i> Mauvaise réponse. La bonne réponse était : ${currentQuestion.answer}`;
+        document.querySelector('.quiz-container').appendChild(feedback);
+        
+        // Remove the notification after 2 seconds
+        setTimeout(() => feedback.remove(), 2000);
+        
+        // Notify other players
+        socket.emit('answerSelected', {
+            sessionId,
+            userId: playerName,
+            questionIndex: currentQuestionIndex,
+            selectedOption: answer,
+            isCorrect: false
+        });
     }
 }
 
-// Add this function to your file
+// Show modal dialog
 function showModal(title, message) {
     modalTitle.textContent = title;
     modalBody.textContent = message;
@@ -455,21 +573,18 @@ function showModal(title, message) {
     };
 }
 
-// Fix the startTimer function
+// Timer function for each question
 function startTimer() {
-    // Clear any existing timer
     clearInterval(timer);
 
     let timeLeft = timeLimit;
     timeSpan.textContent = timeLeft;
     timerDisplay.classList.remove('warning');
 
-    // Start a new timer - FIXED implementation
     timer = setInterval(() => {
         timeLeft--;
         timeSpan.textContent = timeLeft;
         
-        // Add warning class when time is running low
         if (timeLeft <= 5) {
             timerDisplay.classList.add('warning');
         }
@@ -477,20 +592,21 @@ function startTimer() {
         if (timeLeft <= 0) {
             clearInterval(timer);
             showModal('Temps écoulé !', 'Vous avez dépassé le temps imparti pour cette question.');
+            
             currentQuestionIndex++;
             if (currentQuestionIndex < window.quizQuestions.length) {
                 displayQuestion(window.quizQuestions[currentQuestionIndex]);
-                startTimer(); // Restart the timer for the next question
+                startTimer();
             } else {
-                showResults(); // Show results when the quiz ends
+                showResults();
             }
         }
     }, 1000);
 }
 
-// Show results after the quiz
+// Show results after quiz completion
 function showResults() {
-    const playerName = localStorage.getItem("playerName");
+    const playerName = localStorage.getItem("playerName") || "Guest";
     const totalQuestions = window.quizQuestions.length;
     const percentage = Math.round((score / totalQuestions) * 100);
     
@@ -511,6 +627,10 @@ function showResults() {
         resultEmoji = '📚';
     }
     
+    // Request updated session data for final results
+    const sessionId = localStorage.getItem("sessionId");
+    socket.emit('getSessionInfo', { sessionId });
+    
     resultsContainer.innerHTML = `
         <h2>${resultEmoji} Quiz terminé ! ${resultEmoji}</h2>
         <p>${playerName}, votre score : ${score} sur ${totalQuestions} (${percentage}%)</p>
@@ -519,7 +639,43 @@ function showResults() {
             <p>Indices utilisés : ${hintsUsed} sur ${maxHints}</p>
             <p>Temps par question : ${timeLimit} secondes</p>
         </div>
+        <div class="final-ranking">
+            <h3>Classement Final</h3>
+            <ul id="final-ranking-list"></ul>
+        </div>
     `;
+    
+    // Update the final ranking when session info is received
+    socket.once('sessionUpdate', (data) => {
+        const finalRankingList = document.getElementById('final-ranking-list');
+        if (finalRankingList && data.scores) {
+            // Sort scores by score value (highest first)
+            const sortedScores = [...data.scores].sort((a, b) => b.score - a.score);
+            
+            finalRankingList.innerHTML = sortedScores.map((scoreData, index) => {
+                const isCurrentPlayer = scoreData.playerName === playerName;
+                let rank = index + 1;
+                
+                // Handle ties (same score gets same rank)
+                if (index > 0 && sortedScores[index-1].score === scoreData.score) {
+                    // Find the previous player's rank
+                    const prevElement = document.querySelector(`#final-ranking-list li:nth-child(${index})`);
+                    if (prevElement) {
+                        const prevRank = prevElement.querySelector('.rank').textContent;
+                        rank = parseInt(prevRank);
+                    }
+                }
+                
+                return `
+                    <li class="${isCurrentPlayer ? 'current-player' : ''}">
+                        <span class="rank">${rank}</span>
+                        <span class="player-name">${scoreData.playerName}${isCurrentPlayer ? ' (You)' : ''}</span>
+                        <span class="score">${scoreData.score}</span>
+                    </li>
+                `;
+            }).join('');
+        }
+    });
     
     // Hide quiz elements
     quizContainer.style.display = 'none';
@@ -528,48 +684,44 @@ function showResults() {
     
     // Show quiz controls
     document.querySelector('.quiz-controls').style.display = 'flex';
+    resultsContainer.style.display = 'flex';
 }
 
+// Update scoreboard with a player's score
 function updateScoreboard(playerName, playerScore) {
-    const scoreboardList = document.getElementById('scoreboard-list');
-    let playerEntry = document.getElementById(`player-${playerName}`);
-
-    if (!playerEntry) {
-        // Create a new entry for the player if it doesn't exist
-        playerEntry = document.createElement('li');
-        playerEntry.id = `player-${playerName}`;
-        playerEntry.innerHTML = `
-            <span>${playerName}</span>
-            <span class="score">${playerScore}</span>
-        `;
-        scoreboardList.appendChild(playerEntry);
-    } else {
-        // Update the player's score
-        playerEntry.querySelector('.score').textContent = playerScore;
-    }
-    
-    // Sort scoreboard by score (highest first)
-    const entries = Array.from(scoreboardList.children);
-    entries.sort((a, b) => {
-        const scoreA = parseInt(a.querySelector('.score').textContent);
-        const scoreB = parseInt(b.querySelector('.score').textContent);
-        return scoreB - scoreA;
+    // Instead of directly updating the UI, send to server
+    const sessionId = localStorage.getItem("sessionId") || "fallback-session";
+    socket.emit('updateScore', { 
+        sessionId, 
+        playerName, 
+        playerScore 
     });
+}
+
+// Show toast notification
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.id = 'toast-notification';
+    toast.textContent = message;
+    document.body.appendChild(toast);
     
-    // Clear and re-append sorted entries
-    scoreboardList.innerHTML = '';
-    entries.forEach(entry => scoreboardList.appendChild(entry));
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 300);
+    }, 3000);
 }
 
+// Shuffle array (used for answer options)
 function shuffleArray(array) {
-    const newArray = [...array]; // Create a copy to avoid modifying the original
-    for (let i = newArray.length - 1; i > 0; i--) {
+    for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+        [array[i], array[j]] = [array[j], array[i]];
     }
-    return newArray; // Return the shuffled copy, not the original array
+    return array;
 }
-document.addEventListener('DOMContentLoaded', () => {
-startQuiz();
-});
-

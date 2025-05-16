@@ -1,33 +1,68 @@
-const Session = require('../models/sessionModel');
 const Question = require('../models/questionModel');
+const Session = require('../models/sessionModel');
 
+// Start a new game
 const startGame = async (req, res) => {
-    const { sessionId } = req.body;
     try {
-        const session = await Session.findOne({ sessionId });
-        if (!session) return res.status(404).json({ error: 'Session not found' });
-
-        if (!session.isActive) return res.status(400).json({ error: 'Game has already ended' });
-
-        // Logic to start the game
-        session.isActive = true;
+        const { sessionId, userId, difficulty, category } = req.body;
+        
+        // Get questions based on filters
+        let query = {};
+        
+        if (difficulty && difficulty !== 'all') {
+            query.difficulty = difficulty;
+        }
+        
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+        
+        const questions = await Question.find(query).limit(20);
+        
+        // Create or update session
+        let session = await Session.findOne({ sessionId });
+        
+        if (!session) {
+            session = new Session({
+                sessionId,
+                players: [userId],
+                scores: [{ playerName: userId, score: 0 }],
+                questions,
+                difficulty,
+                category,
+                isActive: true
+            });
+        } else {
+            if (!session.players.includes(userId)) {
+                session.players.push(userId);
+                session.scores.push({ playerName: userId, score: 0 });
+            }
+        }
+        
         await session.save();
-
-        res.json({ message: 'Game started', session });
+        
+        res.json({ 
+            message: 'Game started', 
+            sessionId,
+            questionCount: questions.length
+        });
     } catch (error) {
+        console.error('Error starting game:', error);
         res.status(500).json({ error: 'Error starting game' });
     }
 };
 
+// End a game
 const endGame = async (req, res) => {
-    const { sessionId } = req.body;
     try {
+        const { sessionId } = req.body;
+        
         const session = await Session.findOne({ sessionId });
         if (!session) return res.status(404).json({ error: 'Session not found' });
-
+        
         session.isActive = false;
         await session.save();
-
+        
         res.json({ message: 'Game ended', session });
     } catch (error) {
         res.status(500).json({ error: 'Error ending game' });
@@ -58,11 +93,12 @@ const getQuestions = async (req, res) => {
     }
 };
 
-// New function to update scores in the database
+// Update scores in the database
 const updateScore = async (req, res) => {
     const { sessionId, playerName, score } = req.body;
     
     try {
+        // Find the session
         const session = await Session.findOne({ sessionId });
         if (!session) return res.status(404).json({ error: 'Session not found' });
         

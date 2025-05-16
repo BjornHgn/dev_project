@@ -1,15 +1,18 @@
+// Utility functions for generating random IDs and other values
+
 /**
- * Generates a random hexadecimal session ID of specified length
- * @param {number} length - The length of the session ID to generate
- * @returns {string} - A random hexadecimal string
+ * Generates a random session ID (6 characters, uppercase alphanumeric)
+ * @returns {string} - A random 6-character session ID
  */
-const generateSessionId = (length = 16) => {
-    const characters = '0123456789abcdef';
+function generateSessionId() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed confusing characters like 0, O, 1, I
     let result = '';
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
-};
+}
 
-module.exports = { generateSessionId };
+module.exports = {
+    generateSessionId
+};

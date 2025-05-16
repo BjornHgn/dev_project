@@ -7,7 +7,6 @@ const cors = require('cors');
 const aiRoutes = require('./routes/ai');
 const http = require('http');
 const { Server } = require('socket.io');
-const { generateHint, generateQuestion } = require('./controllers/aiController');
 const adminRoutes = require('./routes/admin');
 const fs = require('fs');
 const path = require('path');
@@ -24,7 +23,32 @@ const io = new Server(server, {
     },
 });
 
-// Import questions function
+// Function to fetch questions for a session
+async function fetchQuestionsForSession(difficulty, category, questionCount) {
+    try {
+        let query = {};
+        
+        if (difficulty && difficulty !== 'all') {
+            query.difficulty = difficulty;
+        }
+        
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+        
+        // Get more questions than needed to allow for shuffling
+        const questions = await Question.find(query).limit(questionCount * 2);
+        
+        // Shuffle questions and take the requested number
+        const shuffledQuestions = questions.sort(() => 0.5 - Math.random());
+        return shuffledQuestions.slice(0, questionCount);
+    } catch (error) {
+        console.error('Error fetching questions for session:', error);
+        return [];
+    }
+}
+
+// Import questions from JSON if needed
 async function importQuestionsFromJSON() {
     try {
         // Check if questions already exist in the database
@@ -71,7 +95,7 @@ connectDB().then(async () => {
         console.log('A user connected:', socket.id);
 
         socket.on('joinSession', async (data) => {
-            const { sessionId, userId } = data;
+            const { sessionId, userId, difficulty, category, questionCount } = data;
             console.log(`User ${userId} joined session ${sessionId}`);
             
             try {
@@ -82,15 +106,27 @@ connectDB().then(async () => {
                 let session = await Session.findOne({ sessionId });
                 
                 if (!session) {
-                    // Create a new session if it doesn't exist
+                    // Fetch questions for new session
+                    const sessionQuestions = await fetchQuestionsForSession(
+                        difficulty || 'medium',
+                        category || 'all',
+                        questionCount || 10
+                    );
+                    
+                    // Create a new session with questions
                     session = new Session({
                         sessionId,
                         players: [userId],
                         scores: [{ playerName: userId, score: 0 }],
+                        questions: sessionQuestions,
+                        difficulty: difficulty || 'medium',
+                        category: category || 'all',
+                        questionCount: questionCount || 10,
                         isActive: true,
                         createdAt: new Date()
                     });
                     await session.save();
+                    console.log(`Created new session with ${sessionQuestions.length} questions`);
                 } else {
                     // Add player if not already in session
                     if (!session.players.includes(userId)) {
@@ -104,10 +140,17 @@ connectDB().then(async () => {
                     }
                 }
                 
-                // Broadcast full session data to all clients
+                // Send the session questions to the joining player
+                socket.emit('sessionQuestions', {
+                    questions: session.questions,
+                    currentQuestionIndex: 0
+                });
+                
+                // Broadcast session data to all clients
                 io.to(sessionId).emit('sessionUpdate', {
                     players: session.players,
-                    scores: session.scores
+                    scores: session.scores,
+                    playerCount: session.players.length
                 });
                 
                 // Notify others about the new player
@@ -121,14 +164,12 @@ connectDB().then(async () => {
             }
         });
         
-        // Add this new event for quiz state synchronization
         socket.on('startQuizQuestion', (data) => {
             const { sessionId, questionIndex, question } = data;
             // Broadcast to all other clients in the session
             socket.to(sessionId).emit('quizQuestionStarted', { questionIndex, question });
         });
         
-        // Add this to synchronize answers
         socket.on('answerSelected', (data) => {
             const { sessionId, userId, questionIndex, selectedOption, isCorrect } = data;
             socket.to(sessionId).emit('playerAnswered', { 
@@ -159,7 +200,8 @@ connectDB().then(async () => {
                     // Broadcast updated scores to everyone in the session
                     io.to(sessionId).emit('sessionUpdate', {
                         players: session.players,
-                        scores: session.scores
+                        scores: session.scores,
+                        playerCount: session.players.length
                     });
                 }
             } catch (error) {
@@ -184,6 +226,14 @@ connectDB().then(async () => {
                         scores: session.scores,
                         playerCount: session.players.length
                     });
+                    
+                    // Also send the session questions if they exist
+                    if (session.questions && session.questions.length > 0) {
+                        socket.emit('sessionQuestions', {
+                            questions: session.questions,
+                            currentQuestionIndex: 0
+                        });
+                    }
                 }
             } catch (error) {
                 console.error('Error getting session info:', error);
