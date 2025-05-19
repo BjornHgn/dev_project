@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preload" href="https://cdn.socket.io/4.5.4/socket.io.min.js" as="script">
 </head>
 <body>
     <div class="container">
@@ -177,8 +178,18 @@
             <p>&copy; 2023 Culture Générale Quiz - Tous droits réservés</p>
         </footer>
     </div>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="js/main.js"></script>
     <script src="js/friends.js"></script>
+    <script>
+        // Add test button functionality
+        document.getElementById('test-notification').addEventListener('click', function() {
+            if (typeof window.testGameInvitation === 'function') {
+                window.testGameInvitation();
+            } else {
+                alert('Test function not available');
+            }
+        });
+    </script>
 </body>
 </html>

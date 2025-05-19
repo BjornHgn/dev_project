@@ -1578,3 +1578,109 @@ textarea:focus {
     from { transform: translateY(-20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+
+/* Game Invitation notifications */
+#game-notifications {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 350px;
+}
+
+.game-invitation-notification {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    width: 100%;
+    animation: slideIn 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.game-invitation-notification.notification-hide {
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+.notification-header {
+    background: linear-gradient(135deg, #6b73ff, #000dff);
+    color: white;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: bold;
+}
+
+.notification-header i {
+    margin-right: 8px;
+}
+
+.close-notification {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.close-notification:hover {
+    opacity: 1;
+}
+
+.notification-body {
+    padding: 15px;
+}
+
+.notification-body p {
+    margin: 0 0 15px;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.notification-actions button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    flex: 1;
+}
+
+.accept-invitation {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.accept-invitation:hover {
+    background-color: #388E3C;
+}
+
+.decline-invitation {
+    background-color: #F44336;
+    color: white;
+}
+
+.decline-invitation:hover {
+    background-color: #D32F2F;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
