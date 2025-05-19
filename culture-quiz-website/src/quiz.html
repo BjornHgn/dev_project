@@ -7,36 +7,47 @@
     <link rel="stylesheet" href="css/quiz.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
     <div class="quiz-container">
         <header>
             <h1><i class="fas fa-brain"></i> Culture Générale Quiz</h1>
             <div class="player-info">
-                <span id="player-name"></span>
+                <span id="player-name">Guest</span>
                 <div class="avatar">
                     <i class="fas fa-user"></i>
                 </div>
             </div>
         </header>
-
+        
+        <!-- Session info will be added here dynamically -->
+        
+        <!-- Welcome card will be inserted here dynamically -->
+        
         <div class="quiz-progress">
             <div class="progress-bar">
                 <div id="progress-fill"></div>
             </div>
             <div class="progress-text">
-                <span id="current-question">1</span>  <span id="total-questions">10</span>
+                <span>Question <span id="current-question">1</span> sur <span id="total-questions">10</span></span>
             </div>
         </div>
 
         <div class="main-content">
             <section id="scoreboard">
                 <h2><i class="fas fa-trophy"></i> Classement</h2>
-                <ul id="scoreboard-list"></ul>
+                <ul id="scoreboard-list">
+                    <!-- Players will be added dynamically -->
+                </ul>
             </section>
 
             <section id="quiz">
                 <!-- Questions will be dynamically inserted here -->
+                <div class="loading-indicator">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading questions...</p>
+                </div>
             </section>
 
             <section id="hint-container">
@@ -54,7 +65,7 @@
                 <div id="timer">
                     <i class="fas fa-clock"></i>
                     <div>Temps restant:</div>
-                    <div id="time">30</div>
+                    <div id="time">15</div>
                     <div>secondes</div>
                 </div>
             </div>
@@ -69,7 +80,7 @@
             <!-- Results will be dynamically inserted here -->
         </section>
 
-        <div class="quiz-controls">
+        <div class="quiz-controls" style="display: none;">
             <button id="restart-quiz" class="btn restart-btn"><i class="fas fa-redo"></i> Recommencer</button>
             <button id="share-results" class="btn share-btn"><i class="fas fa-share-alt"></i> Partager</button>
         </div>
@@ -81,13 +92,12 @@
             <h2 id="modal-title"></h2>
             <div id="modal-body"></div>
             <div class="modal-buttons">
-                <button id="modal-confirm" class="btn">Confirmer</button>
+                <button id="modal-confirm" class="btn">OK</button>
                 <button id="modal-cancel" class="btn">Annuler</button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <script type="module" src="js/quiz.js"></script>
+    <script src="js/quiz.js"></script>
 </body>
 </html>

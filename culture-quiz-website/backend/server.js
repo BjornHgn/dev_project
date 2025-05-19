@@ -149,8 +149,10 @@ connectDB().then(async () => {
                 // Broadcast session data to all clients
                 io.to(sessionId).emit('sessionUpdate', {
                     players: session.players,
+                    spectators: session.spectators || [],
                     scores: session.scores,
-                    playerCount: session.players.length
+                    playerCount: session.players.length,
+                    spectatorCount: (session.spectators || []).length
                 });
                 
                 // Notify others about the new player
@@ -206,6 +208,60 @@ connectDB().then(async () => {
                 }
             } catch (error) {
                 console.error('Error updating score:', error);
+            }
+        });
+
+                // Add this inside the socket.io connection handler
+        socket.on('spectateSession', async (data) => {
+            const { sessionId, userId } = data;
+            console.log(`User ${userId} is spectating session ${sessionId}`);
+            
+            try {
+                // Join the socket room
+                socket.join(sessionId);
+                
+                // Find the session
+                const session = await Session.findOne({ sessionId });
+                if (!session) {
+                    socket.emit('error', { message: 'Session not found' });
+                    return;
+                }
+                
+                // Add to spectators if not already there
+                if (!session.spectators) {
+                    session.spectators = [];
+                }
+                
+                if (!session.spectators.includes(userId)) {
+                    session.spectators.push(userId);
+                    await session.save();
+                }
+                
+                // Send questions and current state to spectator
+                socket.emit('sessionQuestions', {
+                    questions: session.questions,
+                    currentQuestionIndex: 0,
+                    isSpectator: true
+                });
+                
+                // Send session data to the spectator
+                socket.emit('sessionUpdate', {
+                    players: session.players,
+                    spectators: session.spectators,
+                    scores: session.scores,
+                    playerCount: session.players.length,
+                    spectatorCount: session.spectators.length
+                });
+                
+                // Notify everyone about the new spectator
+                io.to(sessionId).emit('spectatorJoined', {
+                    userId,
+                    spectatorCount: session.spectators.length
+                });
+                
+            } catch (error) {
+                console.error('Error in spectateSession:', error);
+                socket.emit('error', { message: 'Failed to join as spectator' });
             }
         });
     

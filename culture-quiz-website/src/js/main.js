@@ -1,3 +1,64 @@
+// Check for spectate parameter in URL
+const urlParams = new URLSearchParams(window.location.search);
+const spectateSession = urlParams.get('spectate');
+
+if (spectateSession) {
+    // Automatically handle joining as spectator
+    const playerName = localStorage.getItem('playerName');
+    if (!playerName) {
+        // If no name set, show a prompt to enter name before spectating
+        const namePromptContainer = document.createElement('div');
+        namePromptContainer.className = 'name-prompt-container';
+        namePromptContainer.innerHTML = `
+            <div class="name-prompt">
+                <h3>Enter Your Name to Spectate</h3>
+                <p>You're about to spectate session: <strong>${spectateSession}</strong></p>
+                <input type="text" id="spectate-name" placeholder="Your display name">
+                <div class="prompt-buttons">
+                    <button id="confirm-spectate" class="btn btn-primary">Spectate</button>
+                    <button id="cancel-spectate" class="btn">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(namePromptContainer);
+        
+        // Add event listeners
+        document.getElementById('confirm-spectate').addEventListener('click', async () => {
+            const spectateName = document.getElementById('spectate-name').value.trim();
+            if (spectateName) {
+                localStorage.setItem('playerName', spectateName);
+                const success = await spectateGameSession(spectateSession, spectateName);
+                if (success) {
+                    window.location.href = 'quiz.html';
+                } else {
+                    alert('Failed to join session as spectator. The session may no longer exist.');
+                    namePromptContainer.remove();
+                }
+            } else {
+                alert('Please enter a name');
+            }
+        });
+        
+        document.getElementById('cancel-spectate').addEventListener('click', () => {
+            namePromptContainer.remove();
+            // Remove the spectate parameter from URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        });
+    } else {
+        // If name is set, directly attempt to spectate
+        (async () => {
+            const success = await spectateGameSession(spectateSession, playerName);
+            if (success) {
+                window.location.href = 'quiz.html';
+            } else {
+                alert('Failed to join session as spectator. The session may no longer exist.');
+                // Remove the spectate parameter from URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        })();
+    }
+}
+
 async function createGameSession(playerName) {
     try {
         const response = await fetch('http://10.33.75.205:5000/api/sessions/create', {
@@ -24,6 +85,71 @@ async function createGameSession(playerName) {
         return null;
     }
 }
+
+// Function to join a session as a spectator
+async function spectateGameSession(sessionId, spectatorName) {
+    try {
+        const response = await fetch('http://10.33.75.205:5000/api/sessions/spectate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ sessionId, userId: spectatorName })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Store the session ID in localStorage
+            localStorage.setItem('sessionId', sessionId);
+            localStorage.setItem('playerName', spectatorName);
+            localStorage.setItem('isSpectator', 'true');
+            console.log('Joined session as spectator:', sessionId);
+            return true;
+        } else {
+            console.error('Failed to join session as spectator:', data.error);
+            return false;
+        }
+    } catch (error) {
+        console.error('Error joining session as spectator:', error);
+        return false;
+    }
+}
+
+// Update your join game button event listener to include a spectate option
+document.getElementById('join-game-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const playerName = localStorage.getItem('playerName');
+    if (!playerName) {
+        alert('Please enter your name first');
+        return;
+    }
+    
+    const sessionCode = document.getElementById('session-code').value;
+    if (!sessionCode) {
+        alert('Please enter a session code');
+        return;
+    }
+    
+    // Check if spectator mode is selected
+    const asSpectator = document.getElementById('join-as-spectator').checked;
+    
+    if (asSpectator) {
+        const joined = await spectateGameSession(sessionCode, playerName);
+        if (joined) {
+            window.location.href = 'quiz.html';
+        } else {
+            alert('Failed to spectate game. Check your session code and try again.');
+        }
+    } else {
+        const joined = await joinGameSession(sessionCode, playerName);
+        if (joined) {
+            window.location.href = 'quiz.html';
+        } else {
+            alert('Failed to join game. Check your session code and try again.');
+        }
+    }
+});
 
 // Add this function to join an existing session
 async function joinGameSession(sessionId, playerName) {

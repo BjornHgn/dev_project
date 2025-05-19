@@ -34,6 +34,7 @@ const createSession = async (req, res) => {
         const session = new Session({ 
             sessionId, 
             players: [userId],
+            spectators: [], // Initialize empty spectators array
             scores: [{ playerName: userId, score: 0 }],
             questions: selectedQuestions,
             difficulty: difficulty || 'medium',
@@ -94,6 +95,35 @@ const joinSession = async (req, res) => {
     }
 };
 
+// Add spectate session functionality
+const spectateSession = async (req, res) => {
+    const { sessionId, userId } = req.body;
+    
+    try {
+        const session = await Session.findOne({ sessionId });
+        if (!session) return res.status(404).json({ error: 'Session not found' });
+        
+        // Don't add if already a spectator or player
+        if (!session.spectators.includes(userId) && !session.players.includes(userId)) {
+            session.spectators.push(userId);
+            await session.save();
+        }
+        
+        res.json({ 
+            message: 'Joined session as spectator', 
+            session: {
+                sessionId: session.sessionId,
+                players: session.players,
+                spectators: session.spectators,
+                questionCount: session.questions.length
+            }
+        });
+    } catch (error) {
+        console.error('Error joining session as spectator:', error);
+        res.status(500).json({ error: 'Error joining session as spectator' });
+    }
+};
+
 // Get session data by ID
 const getSession = async (req, res) => {
     try {
@@ -109,4 +139,4 @@ const getSession = async (req, res) => {
     }
 };
 
-module.exports = { createSession, joinSession, getSession };
+module.exports = { createSession, joinSession, spectateSession, getSession };
