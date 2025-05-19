@@ -186,6 +186,108 @@ document.addEventListener("DOMContentLoaded", () => {
     // Check if user is logged in
     const playerName = localStorage.getItem('playerName');
     const token = localStorage.getItem('token');
+    // Also add functionality for the modal close button
+    const addFriendModal = document.getElementById('add-friend-modal');
+    const closeModal = document.getElementById('close-modal');
+    const cancelAddFriend = document.getElementById('cancel-add-friend');
+    const addFriendBtn = document.getElementById('add-friend-btn');
+    const friendsToggle = document.getElementById('friends-toggle');
+    const friendsContainer = document.getElementById('friends-container');
+    const closeFriends = document.getElementById('close-friends');
+    const addFriendForm = document.getElementById('add-friend-form');
+
+    // Add this code after initializing the addFriendForm constant
+    if (addFriendForm) {
+        addFriendForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('You must be logged in to add friends.');
+                addFriendModal.style.display = 'none';
+                return;
+            }
+            
+            const friendUsername = document.getElementById('friend-username').value.trim();
+            if (!friendUsername) {
+                alert('Please enter a username');
+                return;
+            }
+            
+            try {
+                // Remove the test alert that always shows success
+                // alert(`Friend request to "${friendUsername}" sent successfully!`);
+                
+                const response = await fetch('http://10.33.75.205:5000/api/friends/invite', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ username: friendUsername })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Friend request sent successfully!');
+                    // Close the modal
+                    addFriendModal.style.display = 'none';
+                    // Clear the input
+                    document.getElementById('friend-username').value = '';
+                } else {
+                    alert(`Error sending invite: ${data.error || 'Unknown error'}`);
+                }
+                
+            } catch (error) {
+                console.error('Error sending friend invite:', error);
+                alert('Error sending invite. Please try again later.');
+            }
+        });
+    }
+
+    if (friendsToggle && friendsContainer) {
+        // Click event for opening friends panel
+        friendsToggle.addEventListener('click', () => {
+            friendsContainer.classList.add('open');
+        });
+        
+        // Click event for closing friends panel
+        if (closeFriends) {
+            closeFriends.addEventListener('click', () => {
+                friendsContainer.classList.remove('open');
+            });
+        }
+        
+        // Close friends panel when clicking outside of it
+        document.addEventListener('click', (e) => {
+            // Check if the friends container has the 'open' class (works on all screen sizes)
+            if (friendsContainer.classList.contains('open') && 
+                !friendsContainer.contains(e.target) && 
+                e.target !== friendsToggle && 
+                !friendsToggle.contains(e.target)) {
+                friendsContainer.classList.remove('open');
+            }
+        });
+    }
+    
+    if (addFriendBtn && addFriendModal) {
+        addFriendBtn.addEventListener('click', () => {
+            addFriendModal.style.display = 'flex';
+        });
+    }
+    
+    if (closeModal && addFriendModal) {
+        closeModal.addEventListener('click', () => {
+            addFriendModal.style.display = 'none';
+        });
+    }
+    
+    if (cancelAddFriend && addFriendModal) {
+        cancelAddFriend.addEventListener('click', () => {
+            addFriendModal.style.display = 'none';
+        });
+    }
     
     // Update UI based on login status
 

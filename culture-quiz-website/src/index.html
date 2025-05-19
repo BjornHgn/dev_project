@@ -44,7 +44,60 @@
                         </div>
                     </div>
                 </div>
+
+            <!-- Add this to your HTML files like index.html, quiz.html etc. -->
+            <!-- Friends Toggle Button -->
+            <div class="friends-toggle" id="friends-toggle">
+                <i class="fas fa-user-friends"></i>
+                <div class="badge" id="friend-requests-count" style="display: none;">0</div>
+            </div>
+
+            <!-- Friends Container -->
+            <div class="friends-container" id="friends-container">
+                <div class="friends-header">
+                    <h3>Friends</h3>
+                    <button id="close-friends" class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
                 
+                <div class="friends-tabs">
+                    <button data-tab="all" class="active">All</button>
+                    <button data-tab="online">Online</button>
+                    <button data-tab="requests">Requests <span id="tab-request-count" style="display: none;"></span></button>
+                </div>
+                
+                <div class="friends-content">
+                    <div id="friends-list" class="friends-list">
+                        <!-- Friends will be dynamically loaded here -->
+                        <div id="empty-friends" class="empty-friends">
+                            <i class="fas fa-user-friends"></i>
+                            <p>No friends yet. Add some friends to play together!</p>
+                        </div>
+                    </div>
+                    
+                    <button id="add-friend-btn" class="btn add-friend-btn">
+                        <i class="fas fa-user-plus"></i> Add Friend
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add Friend Modal -->
+            <div id="add-friend-modal" class="modal add-friend-modal">
+                <div class="add-friend-content">
+                    <h3>Add a Friend</h3>
+                    <span id="close-modal" class="close">&times;</span>
+                    
+                    <form id="add-friend-form" class="add-friend-form">
+                        <div class="form-group">
+                            <label for="friend-username">Username</label>
+                            <input type="text" id="friend-username" placeholder="Enter friend's username" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn">Send Request</button>
+                            <button type="button" id="cancel-add-friend" class="btn btn-cancel">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
                 <form id="player-form">
                     <div class="form-group">
                         <label for="player-name">Entrez votre nom :</label>
@@ -124,7 +177,8 @@
             <p>&copy; 2023 Culture Générale Quiz - Tous droits réservés</p>
         </footer>
     </div>
-    
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/friends.js"></script>
 </body>
 </html>

@@ -13,6 +13,8 @@ const path = require('path');
 const Question = require('./models/questionModel');
 const questionRoutes = require('./routes/questions');
 const Session = require('./models/sessionModel');
+const friendRoutes = require('./routes/friends');
+
 
 // Initialize Express app
 const app = express();
@@ -89,6 +91,8 @@ connectDB().then(async () => {
     app.use('/api/ai', aiRoutes);
     app.use('/api/admin', adminRoutes);
     app.use('/api/questions', questionRoutes);
+    app.use('/api/friends', friendRoutes);
+
     
     // Socket.io connection handling
     io.on('connection', (socket) => {
