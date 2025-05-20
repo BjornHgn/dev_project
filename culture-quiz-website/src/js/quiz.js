@@ -27,6 +27,8 @@ let timer;
 let hintsUsed = 0;
 const maxHints = 3;
 const timeLimit = 15;
+// Add a quiz completed flag to prevent automatic restart
+let quizCompleted = false;
 
 // Create the socket connection with fallback handling
 const socket = io(window.location.hostname.includes('localhost') 
@@ -76,6 +78,9 @@ async function initializeWithFallback() {
 
 // Listen for session questions
 socket.on('sessionQuestions', (data) => {
+    // Only process if quiz is not completed
+    if (quizCompleted) return;
+    
     console.log('Received session questions:', data);
     if (data.questions && data.questions.length > 0) {
         window.quizQuestions = data.questions;
@@ -180,34 +185,29 @@ async function fetchQuestionsDirectly() {
 function getHardcodedQuestions() {
     return [
         {
-            question: "Quelle est la capitale de la France?",
-            options: ["Paris", "Londres", "Berlin", "Madrid"],
-            answer: "Paris",
-            category: "geography"
+            question: "Quelle est la capitale de la France ?",
+            options: ["Londres", "Berlin", "Paris", "Madrid"],
+            answer: "Paris"
         },
         {
-            question: "Qui a peint la Joconde?",
-            options: ["Picasso", "Van Gogh", "Leonard de Vinci", "Michel-Ange"],
-            answer: "Leonard de Vinci",
-            category: "arts"
+            question: "Qui a peint La Joconde ?",
+            options: ["Pablo Picasso", "Vincent van Gogh", "Leonardo da Vinci", "Claude Monet"],
+            answer: "Leonardo da Vinci"
         },
         {
-            question: "Quelle est la plus grande planète du système solaire?",
-            options: ["Terre", "Mars", "Jupiter", "Saturne"],
-            answer: "Jupiter",
-            category: "science"
+            question: "Quel est l'élément chimique de symbole O ?",
+            options: ["Or", "Oxygène", "Osmium", "Oganesson"],
+            answer: "Oxygène"
         },
         {
-            question: "En quelle année a eu lieu la Révolution française?",
-            options: ["1789", "1815", "1755", "1801"],
-            answer: "1789",
-            category: "history"
+            question: "En quelle année a commencé la Seconde Guerre mondiale ?",
+            options: ["1939", "1940", "1941", "1945"],
+            answer: "1939"
         },
         {
-            question: "Quel est le plus long fleuve du monde?",
-            options: ["Amazone", "Nil", "Mississippi", "Yangtsé"],
-            answer: "Nil",
-            category: "geography"
+            question: "Quel est le plus grand océan du monde ?",
+            options: ["Océan Atlantique", "Océan Indien", "Océan Pacifique", "Océan Arctique"],
+            answer: "Océan Pacifique"
         }
     ];
 }
@@ -221,6 +221,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('Results container found:', !!resultsContainer);
     console.log('Submit button found:', !!submitButton);
     console.log('Player name span found:', !!playerNameSpan);
+    
+    // Reset quiz completed flag on page load
+    quizCompleted = false;
     
     // Check for session ID in URL parameters (for direct joining)
     const urlParams = new URLSearchParams(window.location.search);
@@ -328,6 +331,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Add spectator event listeners
 socket.on('spectatorJoined', (data) => {
+    // Only process if quiz is not completed
+    if (quizCompleted) return;
+    
     // Update spectator count in the UI
     updateSpectatorCount(data.spectatorCount);
     
@@ -402,6 +408,8 @@ function updateFullScoreboard(scores) {
         const isCurrentPlayer = scoreData.playerName === currentPlayer;
         if (isCurrentPlayer) {
             playerEntry.classList.add('current-player');
+            // Update local score if this is the current player
+            score = scoreData.score;
         }
         
         // Add rank number and handle ties
@@ -487,6 +495,7 @@ function restartQuiz() {
     currentQuestionIndex = 0;
     score = 0;
     hintsUsed = 0;
+    quizCompleted = false; // Reset the quiz completed flag
     
     // Hide results section
     if (resultsContainer) {
@@ -702,6 +711,9 @@ if (getHintButton) {
 
 // Add handler for when other players move to a question
 socket.on('quizQuestionStarted', (data) => {
+    // Only process if quiz is not completed
+    if (quizCompleted) return;
+    
     // Only update if we're not the one who sent this event
     if (data.questionIndex !== currentQuestionIndex) {
         currentQuestionIndex = data.questionIndex;
@@ -712,6 +724,9 @@ socket.on('quizQuestionStarted', (data) => {
 
 // Listen for player joined events
 socket.on('playerJoined', (data) => {
+    // Only process if quiz is not completed
+    if (quizCompleted) return;
+    
     // Update player count in the UI
     updatePlayerCount();
     
@@ -737,6 +752,9 @@ function updatePlayerCount() {
 
 // Add handler for when other players answer
 socket.on('playerAnswered', (data) => {
+    // Only process if quiz is not completed
+    if (quizCompleted) return;
+    
     // Show a notification about the other player's answer
     const { userId, isCorrect } = data;
     
@@ -752,6 +770,8 @@ socket.on('playerAnswered', (data) => {
 // Handle answer submission
 if (submitButton) {
     submitButton.addEventListener('click', () => {
+        if (quizCompleted) return; // Prevent submission if quiz is already completed
+        
         const selectedOption = document.querySelector('input[name="answer"]:checked');
         if (selectedOption) {
             const answer = selectedOption.value;
@@ -762,6 +782,7 @@ if (submitButton) {
                 startTimer();
             } else {
                 clearInterval(timer);
+                quizCompleted = true; // Set the quiz as completed
                 showResults();
             }
         } else {
@@ -793,8 +814,8 @@ function checkAnswer(answer) {
         // Remove the notification after 2 seconds
         setTimeout(() => feedback.remove(), 2000);
         
-        // Update score locally
-        updateScoreboard(playerName, score);
+        // Update score locally and in UI
+        updateLocalScoreDisplay(playerName, score);
         
         // Update score on server
         socket.emit('updateScore', { 
@@ -836,7 +857,7 @@ function checkAnswer(answer) {
 function showModal(title, message) {
     if (!modal || !modalTitle || !modalBody) {
         console.error('Modal elements not found');
-        alert(`${title}: ${message}`); // Fallback to alert
+        alert(`${title}: ${message}`);
         return;
     }
     
@@ -844,24 +865,18 @@ function showModal(title, message) {
     modalBody.textContent = message;
     modal.style.display = 'block';
     
-    // Close modal handlers
-    if (closeModal) {
-        closeModal.onclick = () => {
-            modal.style.display = 'none';
-        };
-    }
+    // Add click events for closing the modal
+    modalConfirm.onclick = () => {
+        modal.style.display = 'none';
+    };
     
-    if (modalCancel) {
-        modalCancel.onclick = () => {
-            modal.style.display = 'none';
-        };
-    }
+    modalCancel.onclick = () => {
+        modal.style.display = 'none';
+    };
     
-    if (modalConfirm) {
-        modalConfirm.onclick = () => {
-            modal.style.display = 'none';
-        };
-    }
+    closeModal.onclick = () => {
+        modal.style.display = 'none';
+    };
     
     window.onclick = (event) => {
         if (event.target === modal) {
@@ -884,6 +899,11 @@ function startTimer() {
     timerDisplay.classList.remove('warning');
 
     timer = setInterval(() => {
+        if (quizCompleted) {
+            clearInterval(timer);
+            return;
+        }
+        
         timeLeft--;
         timeSpan.textContent = timeLeft;
         
@@ -900,6 +920,7 @@ function startTimer() {
                 displayQuestion(window.quizQuestions[currentQuestionIndex]);
                 startTimer();
             } else {
+                quizCompleted = true; // Set the quiz as completed
                 showResults();
             }
         }
@@ -913,6 +934,9 @@ function showResults() {
         showModal('Quiz Completed', `Your score: ${score}`);
         return;
     }
+    
+    // Set the quiz as completed to prevent background restart
+    quizCompleted = true;
     
     const playerName = localStorage.getItem("playerName") || "Guest";
     const totalQuestions = window.quizQuestions ? window.quizQuestions.length : 0;
@@ -998,9 +1022,34 @@ function showResults() {
     resultsContainer.style.display = 'flex';
 }
 
-// Update scoreboard with a player's score
-function updateScoreboard(playerName, playerScore) {
-    // Instead of directly updating the UI, send to server
+// Update scoreboard with a player's score (immediate local update)
+function updateLocalScoreDisplay(playerName, playerScore) {
+    const scoreboardList = document.getElementById('scoreboard-list');
+    if (!scoreboardList) return;
+    
+    // Find the player's entry in the scoreboard
+    let playerEntry = document.getElementById(`player-${playerName}`);
+    
+    if (playerEntry) {
+        // Update existing player entry
+        const scoreElement = playerEntry.querySelector('.score');
+        if (scoreElement) {
+            scoreElement.textContent = playerScore;
+        }
+    } else {
+        // If player not in scoreboard yet, add them
+        playerEntry = document.createElement('li');
+        playerEntry.id = `player-${playerName}`;
+        playerEntry.className = 'current-player';
+        playerEntry.innerHTML = `
+            <span class="rank">?</span>
+            <span class="player-name">${playerName} (You)</span>
+            <span class="score">${playerScore}</span>
+        `;
+        scoreboardList.appendChild(playerEntry);
+    }
+    
+    // Send score update to server
     const sessionId = localStorage.getItem("sessionId") || "fallback-session";
     socket.emit('updateScore', { 
         sessionId, 
@@ -1038,15 +1087,9 @@ function showToast(message) {
 
 // Shuffle array (used for answer options)
 function shuffleArray(array) {
-    if (!Array.isArray(array)) {
-        console.error('shuffleArray called with non-array:', array);
-        return [];
-    }
-    
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
+    for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+        [array[i], array[j]] = [array[j], array[i]];
     }
-    return newArray;
+    return array;
 }
