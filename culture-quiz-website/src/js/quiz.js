@@ -408,8 +408,10 @@ function updateFullScoreboard(scores) {
         const isCurrentPlayer = scoreData.playerName === currentPlayer;
         if (isCurrentPlayer) {
             playerEntry.classList.add('current-player');
-            // Update local score if this is the current player
-            score = scoreData.score;
+            // Update local score if this is the current player and we're not in the final results screen
+            if (!quizCompleted) {
+                score = scoreData.score;
+            }
         }
         
         // Add rank number and handle ties
@@ -783,7 +785,20 @@ if (submitButton) {
             } else {
                 clearInterval(timer);
                 quizCompleted = true; // Set the quiz as completed
+                
+                // Show results immediately using our current local score
+                // This is the key fix - we don't wait for the server
                 showResults();
+                
+                // Still update the server for other players
+                const playerName = localStorage.getItem("playerName") || "Guest";
+                const sessionId = localStorage.getItem("sessionId") || "fallback-session";
+                
+                socket.emit('updateScore', { 
+                    sessionId, 
+                    playerName, 
+                    playerScore: score 
+                });
             }
         } else {
             showModal('Selection requise', 'Veuillez sélectionner une réponse avant de continuer.');
@@ -816,13 +831,6 @@ function checkAnswer(answer) {
         
         // Update score locally and in UI
         updateLocalScoreDisplay(playerName, score);
-        
-        // Update score on server
-        socket.emit('updateScore', { 
-            sessionId, 
-            playerName, 
-            playerScore: score 
-        });
         
         // Also notify other players
         socket.emit('answerSelected', {
@@ -921,7 +929,16 @@ function startTimer() {
                 startTimer();
             } else {
                 quizCompleted = true; // Set the quiz as completed
-                showResults();
+                showResults(); // Show results immediately with local score
+                
+                // Still update server for multiplayer consistency
+                const playerName = localStorage.getItem("playerName") || "Guest";
+                const sessionId = localStorage.getItem("sessionId") || "fallback-session";
+                socket.emit('updateScore', { 
+                    sessionId, 
+                    playerName, 
+                    playerScore: score 
+                });
             }
         }
     }, 1000);
@@ -959,10 +976,7 @@ function showResults() {
         resultEmoji = '📚';
     }
     
-    // Request updated session data for final results
-    const sessionId = localStorage.getItem("sessionId");
-    socket.emit('getSessionInfo', { sessionId });
-    
+    // Create the results HTML
     resultsContainer.innerHTML = `
         <h2>${resultEmoji} Quiz terminé ! ${resultEmoji}</h2>
         <p>${playerName}, votre score : ${score} sur ${totalQuestions} (${percentage}%)</p>
@@ -977,37 +991,62 @@ function showResults() {
         </div>
     `;
     
-    // Update the final ranking when session info is received
-    socket.once('sessionUpdate', (data) => {
-        const finalRankingList = document.getElementById('final-ranking-list');
-        if (finalRankingList && data.scores) {
-            // Sort scores by score value (highest first)
-            const sortedScores = [...data.scores].sort((a, b) => b.score - a.score);
-            
-            finalRankingList.innerHTML = sortedScores.map((scoreData, index) => {
-                const isCurrentPlayer = scoreData.playerName === playerName;
-                let rank = index + 1;
+    // Create the final ranking with available data and our current local score
+    const finalRankingList = document.getElementById('final-ranking-list');
+    if (finalRankingList) {
+        // Get the current scoreboard data
+        const scoreboardList = document.getElementById('scoreboard-list');
+        const players = [];
+        
+        // First add our current player with the correct score
+        players.push({
+            playerName: playerName,
+            score: score,
+            isCurrentPlayer: true
+        });
+        
+        // Extract other players from the scoreboard if it exists
+        if (scoreboardList) {
+            const playerItems = scoreboardList.querySelectorAll('li:not(.current-player)');
+            playerItems.forEach(item => {
+                const name = item.querySelector('.player-name').textContent.replace(' (You)', '');
+                const playerScore = parseInt(item.querySelector('.score').textContent, 10);
                 
-                // Handle ties (same score gets same rank)
-                if (index > 0 && sortedScores[index-1].score === scoreData.score) {
-                    // Find the previous player's rank
-                    const prevElement = document.querySelector(`#final-ranking-list li:nth-child(${index})`);
-                    if (prevElement) {
-                        const prevRank = prevElement.querySelector('.rank').textContent;
-                        rank = parseInt(prevRank);
-                    }
+                if (name && !isNaN(playerScore) && name !== playerName) {
+                    players.push({
+                        playerName: name,
+                        score: playerScore,
+                        isCurrentPlayer: false
+                    });
                 }
-                
-                return `
-                    <li class="${isCurrentPlayer ? 'current-player' : ''}">
-                        <span class="rank">${rank}</span>
-                        <span class="player-name">${scoreData.playerName}${isCurrentPlayer ? ' (You)' : ''}</span>
-                        <span class="score">${scoreData.score}</span>
-                    </li>
-                `;
-            }).join('');
+            });
         }
-    });
+        
+        // Sort players by score (highest first)
+        const sortedPlayers = players.sort((a, b) => b.score - a.score);
+        
+        // Create ranking list
+        finalRankingList.innerHTML = sortedPlayers.map((player, index) => {
+            let rank = index + 1;
+            
+            // Handle ties
+            if (index > 0 && sortedPlayers[index-1].score === player.score) {
+                const prevElement = finalRankingList.querySelector(`li:nth-child(${index})`);
+                if (prevElement) {
+                    const prevRank = prevElement.querySelector('.rank').textContent;
+                    rank = parseInt(prevRank, 10);
+                }
+            }
+            
+            return `
+                <li class="${player.isCurrentPlayer ? 'current-player' : ''}">
+                    <span class="rank">${rank}</span>
+                    <span class="player-name">${player.playerName}${player.isCurrentPlayer ? ' (You)' : ''}</span>
+                    <span class="score">${player.score}</span>
+                </li>
+            `;
+        }).join('');
+    }
     
     // Hide quiz elements
     if (quizContainer) quizContainer.style.display = 'none';
