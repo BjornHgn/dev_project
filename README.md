@@ -35,7 +35,7 @@ Navigateur web moderne
 1. Cloner le dépôt
 
 ```shell
-git clone https://github.com/votre-username/culture-quiz-website.git
+git clone https://github.com/BjornHgn/culture-quiz-website.git
 cd culture-quiz-website
 ```
 
@@ -67,6 +67,12 @@ Démarrer le serveur backend
 ```shell
 cd backend
 node server.js
+```
+
+Puis
+
+```npm
+npm start
 ```
 
 Ouvrez votre navigateur et naviguez vers http://localhost:5000

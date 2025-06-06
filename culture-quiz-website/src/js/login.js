@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 // For regular users, create a session but redirect to homepage instead of quiz
-                const sessionResponse = await fetch('http://localhost:5000/api/sessions/create', {
+                const sessionResponse = await fetch('http://10.33.75.205:5000/api/sessions/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
