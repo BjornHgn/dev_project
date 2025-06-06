@@ -86,12 +86,17 @@ connectDB().then(async () => {
     // Middleware
     app.use(cors());
     app.use(express.json());
+    app.use(express.static(path.join(__dirname, '../src')));
     
     // Make IO available to all routes
     app.use((req, res, next) => {
         req.io = io;
         req.connectedUsers = app.locals.connectedUsers;
         next();
+    });
+
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(__dirname, '../src/index.html'));
     });
     
     // Routes
