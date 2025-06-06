@@ -1,7 +1,7 @@
 // DOM Elements
 const quizContainer = document.getElementById('quiz');
 const resultsContainer = document.getElementById('results');
-const submitButton = document.getElementById('submit');
+const submitButton = document.getElementById('submit-answer'); // FIXED: consistent ID reference
 const timerDisplay = document.getElementById('timer');
 const timeSpan = document.getElementById('time');
 const progressFill = document.getElementById('progress-fill');
@@ -29,6 +29,8 @@ const maxHints = 3;
 const timeLimit = 15;
 // Add a quiz completed flag to prevent automatic restart
 let quizCompleted = false;
+// Add global variable to track spectator mode
+let isSpectatorMode = false;
 
 // Create the socket connection with fallback handling
 const socket = io(window.location.hostname.includes('localhost') 
@@ -96,8 +98,19 @@ socket.on('sessionQuestions', (data) => {
         // Display the current question
         displayQuestion(window.quizQuestions[currentQuestionIndex]);
         startTimer();
+        
+        // IMPORTANT: Re-apply spectator mode restrictions after questions are loaded
+        if (isSpectatorMode) {
+            setTimeout(disableAllQuizInteractions, 100);
+        }
     } else {
         console.error('Received empty or invalid questions data');
+    }
+});
+
+socket.on('scoreUpdate', (data) => {
+    if (data.scores) {
+        updateFullScoreboard(data.scores);
     }
 });
 
@@ -224,6 +237,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Reset quiz completed flag on page load
     quizCompleted = false;
+
+    // IMPORTANT: Check spectator status first and log it clearly
+    isSpectatorMode = localStorage.getItem("isSpectator") === "true";
+    console.log('Spectator mode:', isSpectatorMode);
+    
+    // If in spectator mode, add the class to body immediately
+    if (isSpectatorMode) {
+        document.body.classList.add('spectator-mode');
+    }
     
     // Check for session ID in URL parameters (for direct joining)
     const urlParams = new URLSearchParams(window.location.search);
@@ -249,9 +271,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Player name span not found in DOM');
     }
     
-    // Check if user is a spectator
-    const isSpectator = localStorage.getItem("isSpectator") === "true";
-    
     // Get quiz preferences from localStorage
     const difficulty = localStorage.getItem("difficulty") || "medium";
     const category = localStorage.getItem("category") || "all";
@@ -264,7 +283,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Create session info display
     displaySessionInfo();
     
-    if (isSpectator) {
+    if (isSpectatorMode) {
         console.log(`${playerName} is spectating session: ${sessionId}`);
         
         // Join as spectator
@@ -273,11 +292,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             userId: playerName
         });
         
-        // Disable answering UI for spectators
-        if (submitButton) submitButton.disabled = true;
-        if (submitButton) submitButton.style.opacity = "0.5";
-        if (getHintButton) getHintButton.disabled = true;
-        if (getHintButton) getHintButton.style.opacity = "0.5";
+        // Mark the document body with a spectator class
+        document.body.classList.add('spectator-mode');
+        
+        // IMPORTANT: Use capture phase to ensure we catch events before they reach targets
+        // Multiple event types for comprehensive coverage
+        document.addEventListener('click', preventSpectatorInteraction, true);
+        document.addEventListener('mousedown', preventSpectatorInteraction, true);
+        document.addEventListener('touchstart', preventSpectatorInteraction, true);
+        document.addEventListener('keydown', preventSpectatorInteraction, true);
+        document.addEventListener('change', preventSpectatorInteraction, true);
+        
+        // Disable all interactive elements immediately
+        disableAllQuizInteractions();
         
         // Add spectator badge
         const spectatorBadge = document.createElement('div');
@@ -288,6 +315,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Apply visual indicator for spectator mode
         document.querySelector('.quiz-container').style.border = '2px solid rgba(155, 89, 182, 0.5)';
     } else {
+        // Make sure we're not in spectator mode - double check
+        localStorage.removeItem('isSpectator');
+        isSpectatorMode = false;
+        
         // Join as player
         console.log(`Starting quiz for player: ${playerName} with session: ${sessionId}`);
         
@@ -327,6 +358,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.reload();
         }
     }, 10000);
+    
+    // Add an extra check after all initialization is done
+    setTimeout(() => {
+        if (isSpectatorMode) {
+            console.log('Double-checking spectator restrictions...');
+            disableAllQuizInteractions();
+        }
+    }, 1000);
 });
 
 // Add spectator event listeners
@@ -350,8 +389,101 @@ socket.on('spectatorJoined', (data) => {
 // Add event listener for restart button
 document.getElementById('restart-quiz')?.addEventListener('click', () => {
     console.log('Restart button clicked');
+    if (isSpectatorMode) {
+        showToast('You are in spectator mode and cannot restart the quiz');
+        return;
+    }
     restartQuiz();
 });
+
+// IMPROVED: More comprehensive disabling of all quiz interactions
+function disableAllQuizInteractions() {
+    console.log('Disabling ALL quiz interactions for spectator');
+    
+    // Disable all radio buttons
+    const radioButtons = document.querySelectorAll('input[type="radio"]');
+    radioButtons.forEach(radio => {
+        radio.disabled = true;
+        radio.setAttribute('data-spectator-disabled', 'true');
+        if (radio.parentElement) {
+            radio.parentElement.classList.add('disabled');
+            radio.parentElement.setAttribute('data-spectator-disabled', 'true');
+        }
+    });
+    
+    // Disable all buttons in the quiz container
+    const allButtons = document.querySelectorAll('button:not(.spectator-exempt)');
+    allButtons.forEach(button => {
+        // Skip certain buttons that spectators should be able to use
+        if (button.id === 'copy-spectate-link') return;
+        
+        button.disabled = true;
+        button.style.opacity = "0.5";
+        button.setAttribute('data-spectator-disabled', 'true');
+        
+        // Save original click handler and replace with spectator message
+        if (!button.getAttribute('data-original-click')) {
+            button.setAttribute('data-original-click', 'saved');
+            const originalClick = button.onclick;
+            button.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showToast('You are in spectator mode and cannot interact with the quiz');
+                return false;
+            };
+        }
+    });
+    
+    // Specifically target the submit button which might be added dynamically later
+    const submitBtn = document.getElementById('submit-answer');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = "0.5";
+        submitBtn.setAttribute('data-spectator-disabled', 'true');
+        
+        // Add a safety measure - replace the click handler
+        submitBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showToast('You are in spectator mode and cannot submit answers');
+            return false;
+        };
+    }
+    
+    // Also disable the hints button
+    const hintBtn = document.getElementById('get-hint');
+    if (hintBtn) {
+        hintBtn.disabled = true;
+        hintBtn.style.opacity = "0.5";
+        hintBtn.setAttribute('data-spectator-disabled', 'true');
+        
+        // Replace click handler
+        hintBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showToast('You are in spectator mode and cannot get hints');
+            return false;
+        };
+    }
+    
+    // Add CSS to prevent clicking on disabled elements
+    if (!document.getElementById('spectator-style')) {
+        const style = document.createElement('style');
+        style.id = 'spectator-style';
+        style.textContent = `
+            [data-spectator-disabled="true"] {
+                pointer-events: none !important;
+                cursor: not-allowed !important;
+                opacity: 0.6 !important;
+            }
+            .spectator-mode label {
+                pointer-events: none !important;
+                cursor: not-allowed !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
 
 // Update spectator count
 function updateSpectatorCount(count) {
@@ -471,7 +603,7 @@ function displaySessionInfo() {
         // Add a spectator link to session info for sharing
         const spectateLink = document.createElement('p');
         spectateLink.className = 'spectate-link';
-        spectateLink.innerHTML = `<button id="copy-spectate-link" class="btn btn-small">
+        spectateLink.innerHTML = `<button id="copy-spectate-link" class="btn btn-small spectator-exempt">
             <i class="fas fa-copy"></i> Copy Spectator Link
         </button>`;
         sessionInfo.appendChild(spectateLink);
@@ -493,6 +625,12 @@ function displaySessionInfo() {
 
 // Function to restart the quiz
 function restartQuiz() {
+    // Don't allow spectators to restart
+    if (isSpectatorMode) {
+        showToast('You are in spectator mode and cannot restart the quiz');
+        return;
+    }
+    
     // Reset quiz state
     currentQuestionIndex = 0;
     score = 0;
@@ -607,17 +745,51 @@ function displayQuestion(question) {
         // Store the shuffled options on the window object for later reference
         window.currentShuffledOptions = shuffledOptions;
         
+        // IMPORTANT: Check spectator status before rendering
+        const spectatorDisabled = isSpectatorMode ? 'disabled' : '';
+        
         quizContainer.innerHTML = `
             <h2 id="question">${question.question}</h2>
             <ul>
                 ${shuffledOptions.map((option, index) => `
-                    <li>
-                        <input type="radio" name="answer" value="${option}" id="option${index}">
+                    <li class="${isSpectatorMode ? 'disabled' : ''}">
+                        <input type="radio" name="answer" value="${option}" id="option${index}" ${spectatorDisabled}>
                         <label for="option${index}">${option}</label>
                     </li>
                 `).join('')}
             </ul>
         `;
+
+        // VERY IMPORTANT: Re-check spectator status on EVERY question display
+        // Use multiple checks to ensure it catches correctly
+        if (localStorage.getItem("isSpectator") === "true" || isSpectatorMode) {
+            console.log("Re-applying spectator restrictions for new question");
+            
+            // Make sure we update the global variable
+            isSpectatorMode = true;
+            
+            // Use multiple setTimeout calls with different delays to ensure UI is updated
+            setTimeout(disableAllQuizInteractions, 0);
+            setTimeout(disableAllQuizInteractions, 50);
+            setTimeout(disableAllQuizInteractions, 200);
+            
+            // Make sure body has spectator class
+            document.body.classList.add('spectator-mode');
+            
+            // Reattach event handlers - first remove to avoid duplicates
+            document.removeEventListener('click', preventSpectatorInteraction, true);
+            document.removeEventListener('mousedown', preventSpectatorInteraction, true);
+            document.removeEventListener('touchstart', preventSpectatorInteraction, true);
+            document.removeEventListener('keydown', preventSpectatorInteraction, true);
+            document.removeEventListener('change', preventSpectatorInteraction, true);
+            
+            // Add all event listeners with capture phase
+            document.addEventListener('click', preventSpectatorInteraction, true);
+            document.addEventListener('mousedown', preventSpectatorInteraction, true);
+            document.addEventListener('touchstart', preventSpectatorInteraction, true);
+            document.addEventListener('keydown', preventSpectatorInteraction, true);
+            document.addEventListener('change', preventSpectatorInteraction, true);
+        }
         
         // Handle hints
         if (hintContainer) {
@@ -628,7 +800,11 @@ function displayQuestion(question) {
         // Update hint button
         if (getHintButton) {
             getHintButton.innerHTML = `<i class="fas fa-lightbulb"></i> Obtenir un indice`;
-            getHintButton.disabled = hintsUsed >= maxHints;
+            getHintButton.disabled = hintsUsed >= maxHints || isSpectatorMode;
+            
+            if (isSpectatorMode) {
+                getHintButton.setAttribute('data-spectator-disabled', 'true');
+            }
         }
         
         // Emit event to synchronize with other players
@@ -649,6 +825,12 @@ function displayQuestion(question) {
 // Handle get hint button click
 if (getHintButton) {
     getHintButton.addEventListener('click', async () => {
+        // Don't allow spectators to get hints - multiple checks
+        if (localStorage.getItem("isSpectator") === "true" || isSpectatorMode) {
+            showToast('You are in spectator mode and cannot get hints');
+            return;
+        }
+        
         if (hintsUsed >= maxHints) {
             showModal('Limite d\'indices atteinte', 'Vous avez utilisé tous vos indices disponibles.');
             return;
@@ -721,6 +903,11 @@ socket.on('quizQuestionStarted', (data) => {
         currentQuestionIndex = data.questionIndex;
         displayQuestion(data.question);
         startTimer(); // Restart the timer
+        
+        // Re-check spectator status
+        if (isSpectatorMode) {
+            setTimeout(disableAllQuizInteractions, 100);
+        }
     }
 });
 
@@ -772,7 +959,15 @@ socket.on('playerAnswered', (data) => {
 // Handle answer submission
 if (submitButton) {
     submitButton.addEventListener('click', () => {
-        if (quizCompleted) return; // Prevent submission if quiz is already completed
+        // IMPORTANT: Add multiple spectator checks
+        if (localStorage.getItem("isSpectator") === "true" || isSpectatorMode) {
+            console.log('Blocked submit attempt by spectator');
+            showToast('You are in spectator mode and cannot submit answers');
+            return false;
+        }
+        
+        // Prevent submission if quiz is already completed
+        if (quizCompleted) return; 
         
         const selectedOption = document.querySelector('input[name="answer"]:checked');
         if (selectedOption) {
@@ -787,7 +982,6 @@ if (submitButton) {
                 quizCompleted = true; // Set the quiz as completed
                 
                 // Show results immediately using our current local score
-                // This is the key fix - we don't wait for the server
                 showResults();
                 
                 // Still update the server for other players
@@ -808,6 +1002,12 @@ if (submitButton) {
 
 // Check the selected answer
 function checkAnswer(answer) {
+    // IMPORTANT: Don't allow spectators to check answers
+    if (isSpectatorMode) {
+        showToast('You are in spectator mode and cannot submit answers');
+        return;
+    }
+    
     if (!window.quizQuestions || !window.quizQuestions[currentQuestionIndex]) {
         console.error('No current question to check answer against');
         return;
@@ -921,7 +1121,11 @@ function startTimer() {
 
         if (timeLeft <= 0) {
             clearInterval(timer);
-            showModal('Temps écoulé !', 'Vous avez dépassé le temps imparti pour cette question.');
+            
+            // IMPORTANT: Only show timeout modal for non-spectators
+            if (!isSpectatorMode) {
+                showModal('Temps écoulé !', 'Vous avez dépassé le temps imparti pour cette question.');
+            }
             
             currentQuestionIndex++;
             if (window.quizQuestions && currentQuestionIndex < window.quizQuestions.length) {
@@ -931,14 +1135,16 @@ function startTimer() {
                 quizCompleted = true; // Set the quiz as completed
                 showResults(); // Show results immediately with local score
                 
-                // Still update server for multiplayer consistency
-                const playerName = localStorage.getItem("playerName") || "Guest";
-                const sessionId = localStorage.getItem("sessionId") || "fallback-session";
-                socket.emit('updateScore', { 
-                    sessionId, 
-                    playerName, 
-                    playerScore: score 
-                });
+                // Only update score for non-spectators
+                if (!isSpectatorMode) {
+                    const playerName = localStorage.getItem("playerName") || "Guest";
+                    const sessionId = localStorage.getItem("sessionId") || "fallback-session";
+                    socket.emit('updateScore', { 
+                        sessionId, 
+                        playerName, 
+                        playerScore: score 
+                    });
+                }
             }
         }
     }, 1000);
@@ -1059,10 +1265,66 @@ function showResults() {
     const quizControls = document.querySelector('.quiz-controls');
     if (quizControls) quizControls.style.display = 'flex';
     resultsContainer.style.display = 'flex';
+
+    // Request latest scores from server for final scoreboard
+    const sessionId = localStorage.getItem("sessionId") || "fallback-session";
+    socket.emit('getSessionInfo', { sessionId });
+    
+    // Add a one-time listener for the final scores
+    socket.once('sessionUpdate', (data) => {
+        if (data.scores) {
+            updateFinalRankingDisplay(data.scores);
+        }
+    });
+    
+    // If in spectator mode, disable restart button
+    if (isSpectatorMode) {
+        const restartBtn = document.getElementById('restart-quiz');
+        if (restartBtn) {
+            restartBtn.disabled = true;
+            restartBtn.style.opacity = "0.5";
+            restartBtn.setAttribute('data-spectator-disabled', 'true');
+        }
+    }
+}
+
+// Add this function to update the final ranking with server data
+function updateFinalRankingDisplay(scores) {
+    const finalRankingList = document.getElementById('final-ranking-list');
+    if (!finalRankingList) return;
+    
+    // Sort scores by score value (highest first)
+    const sortedScores = [...scores].sort((a, b) => b.score - a.score);
+    const currentPlayer = localStorage.getItem("playerName") || "Guest";
+    
+    finalRankingList.innerHTML = '';
+    
+    // Create ranking list items with correct ranking
+    sortedScores.forEach((player, index) => {
+        let rank = index + 1;
+        
+        // Handle ties
+        if (index > 0 && sortedScores[index-1].score === player.score) {
+            rank = index; // Same rank as previous player
+        }
+        
+        const isCurrentPlayer = player.playerName === currentPlayer;
+        
+        finalRankingList.innerHTML += `
+            <li class="${isCurrentPlayer ? 'current-player' : ''}">
+                <span class="rank">${rank}</span>
+                <span class="player-name">${player.playerName}${isCurrentPlayer ? ' (You)' : ''}</span>
+                <span class="score">${player.score}</span>
+            </li>
+        `;
+    });
 }
 
 // Update scoreboard with a player's score (immediate local update)
 function updateLocalScoreDisplay(playerName, playerScore) {
+    // Don't update scores for spectators
+    if (isSpectatorMode) return;
+    
     const scoreboardList = document.getElementById('scoreboard-list');
     if (!scoreboardList) return;
     
@@ -1122,6 +1384,51 @@ function showToast(message) {
             }
         }, 300);
     }, 3000);
+}
+
+// IMPROVED: Much more comprehensive function to prevent spectator interactions
+function preventSpectatorInteraction(event) {
+    // Only run this for spectator mode - multiple checks
+    if (localStorage.getItem("isSpectator") !== "true" && !isSpectatorMode) return;
+    
+    // Update the global variable if it's inconsistent
+    if (!isSpectatorMode) {
+        isSpectatorMode = true;
+    }
+    
+    // Get the clicked element
+    let el = event.target;
+    
+    // Block interaction with ALL quiz elements except scrolling containers
+    // Check both the element itself and its parents/ancestors
+    if (el.tagName === 'INPUT' || 
+        el.tagName === 'LABEL' || 
+        el.tagName === 'BUTTON' ||
+        el.closest('input') ||
+        el.closest('label') ||
+        el.closest('button:not(.spectator-exempt)') ||
+        el.closest('#submit-answer') ||
+        el.closest('#get-hint')) {
+        
+        // Allow spectator-exempt elements
+        if (el.classList && el.classList.contains('spectator-exempt') ||
+            (el.closest && el.closest('.spectator-exempt'))) {
+            return true;
+        }
+        
+        // Log attempt
+        console.log('🚫 Spectator attempted to interact with:', el.tagName);
+        
+        // Stop the event completely
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        
+        // Show a reminder
+        showToast('You are in spectator mode and cannot interact with the quiz');
+        
+        return false;
+    }
 }
 
 // Shuffle array (used for answer options)

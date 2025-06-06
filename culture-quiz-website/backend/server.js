@@ -225,6 +225,34 @@ connectDB().then(async () => {
             console.log('A user disconnected:', socket.id);
         });
 
+        socket.on('updateScore', async (data) => {
+            try {
+                const { sessionId, playerName, playerScore } = data;
+                
+                // Find the session
+                const session = await Session.findOne({ sessionId });
+                if (!session) return;
+                
+                // Update or add player score
+                const playerScoreIndex = session.scores?.findIndex(s => s.playerName === playerName);
+                if (playerScoreIndex > -1) {
+                    session.scores[playerScoreIndex].score = playerScore;
+                } else {
+                    if (!session.scores) session.scores = [];
+                    session.scores.push({ playerName, playerScore });
+                }
+                
+                await session.save();
+                
+                // Broadcast updated scores to all clients in the session
+                io.to(sessionId).emit('scoreUpdate', {
+                    scores: session.scores
+                });
+            } catch (error) {
+                console.error('Error updating score:', error);
+            }
+        });
+
         socket.on('getSessionInfo', async (data) => {
             try {
                 const session = await Session.findOne({ sessionId: data.sessionId });

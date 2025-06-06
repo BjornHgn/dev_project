@@ -20,6 +20,7 @@ if (spectateSession) {
                 </div>
             </div>
         `;
+        
         document.body.appendChild(namePromptContainer);
         
         // Add event listeners
@@ -27,6 +28,8 @@ if (spectateSession) {
             const spectateName = document.getElementById('spectate-name').value.trim();
             if (spectateName) {
                 localStorage.setItem('playerName', spectateName);
+                // IMPORTANT: Set spectator flag before calling API
+                localStorage.setItem('isSpectator', 'true');
                 const success = await spectateGameSession(spectateSession, spectateName);
                 if (success) {
                     window.location.href = 'quiz.html';
@@ -47,6 +50,8 @@ if (spectateSession) {
     } else {
         // If name is set, directly attempt to spectate
         (async () => {
+            // IMPORTANT: Set spectator flag before calling API
+            localStorage.setItem('isSpectator', 'true');
             const success = await spectateGameSession(spectateSession, playerName);
             if (success) {
                 window.location.href = 'quiz.html';
@@ -74,6 +79,8 @@ async function createGameSession(playerName) {
         if (response.ok) {
             // Store the session ID in localStorage
             localStorage.setItem('sessionId', data.session.sessionId);
+            // IMPORTANT: Make sure to clear spectator flag
+            localStorage.removeItem('isSpectator');
             console.log('Created session:', data.session.sessionId);
             return data.session.sessionId;
         } else {
@@ -103,6 +110,7 @@ async function spectateGameSession(sessionId, spectatorName) {
             // Store the session ID in localStorage
             localStorage.setItem('sessionId', sessionId);
             localStorage.setItem('playerName', spectatorName);
+            // IMPORTANT: Set spectator flag
             localStorage.setItem('isSpectator', 'true');
             console.log('Joined session as spectator:', sessionId);
             return true;
@@ -117,7 +125,7 @@ async function spectateGameSession(sessionId, spectatorName) {
 }
 
 // Update your join game button event listener to include a spectate option
-document.getElementById('join-game-form').addEventListener('submit', async (e) => {
+document.getElementById('join-game-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const playerName = localStorage.getItem('playerName');
     if (!playerName) {
@@ -134,7 +142,9 @@ document.getElementById('join-game-form').addEventListener('submit', async (e) =
     // Check if spectator mode is selected
     const asSpectator = document.getElementById('join-as-spectator').checked;
     
+    // IMPORTANT: Set or clear the spectator flag explicitly
     if (asSpectator) {
+        localStorage.setItem('isSpectator', 'true');
         const joined = await spectateGameSession(sessionCode, playerName);
         if (joined) {
             window.location.href = 'quiz.html';
@@ -142,6 +152,8 @@ document.getElementById('join-game-form').addEventListener('submit', async (e) =
             alert('Failed to spectate game. Check your session code and try again.');
         }
     } else {
+        // Clear any previous spectator flag
+        localStorage.removeItem('isSpectator');
         const joined = await joinGameSession(sessionCode, playerName);
         if (joined) {
             window.location.href = 'quiz.html';
@@ -167,6 +179,8 @@ async function joinGameSession(sessionId, playerName) {
         if (response.ok) {
             // Store the session ID in localStorage
             localStorage.setItem('sessionId', sessionId);
+            // IMPORTANT: Clear spectator flag to ensure we're not in spectator mode
+            localStorage.removeItem('isSpectator');
             console.log('Joined session:', sessionId);
             return true;
         } else {
@@ -178,7 +192,6 @@ async function joinGameSession(sessionId, playerName) {
         return false;
     }
 }
-
 
 // Replace all existing event listeners with this single one
 document.addEventListener("DOMContentLoaded", () => {
